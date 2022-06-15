@@ -1,3 +1,7 @@
+if [ $SPIN ]; then
+  exit 0
+fi
+
 export DF_HOME=~/dotfiles
 export DF_CORE=$DF_HOME/core
 export DF_USER=$DF_HOME/personal
@@ -5,15 +9,6 @@ export DF_USER=$DF_HOME/personal
 # Create common color functions.
 autoload -U colors
 colors
-
-# Include the default Spin zshrc
-# This file has a number of useful functions for detecting the status of the Spin environment.
-# We can still overwrite the terminal display later on, if we want.
-if [ $SPIN ]; then
-  if [ -e /etc/zsh/zshrc.default.inc.zsh ]; then
-    source /etc/zsh/zshrc.default.inc.zsh
-  fi
-fi
 
 source $DF_CORE/environment.zsh
 source $DF_USER/environment.zsh
