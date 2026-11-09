@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""Snap a floating Hyprland window to a fraction of its monitor's work area."""
+import json
+import math
+import subprocess
+import sys
+
+
+def query(name):
+    return json.loads(subprocess.check_output(["hyprctl", "-j", name], text=True))
+
+
+def dispatch(expression):
+    result = subprocess.check_output(["hyprctl", "dispatch", expression], text=True)
+    if result.strip() != "ok":
+        raise RuntimeError(result.strip())
+
+
+def place(window, x, y, width, height):
+    target = json.dumps("address:" + window["address"])
+    dispatch(f'hl.dsp.window.fullscreen_state({{window={target}, action="set", internal=0, client=0, layout_aware=false}})')
+    dispatch(f'hl.dsp.window.float({{window={target}, action="on"}})')
+    dispatch(f'hl.dsp.window.resize({{window={target}, x={width}, y={height}, relative=false}})')
+    dispatch(f'hl.dsp.window.move({{window={target}, x={x}, y={y}, relative=false}})')
+
+
+def main():
+    mode = sys.argv[1]
+    windows = query("clients")
+    monitors = query("monitors")
+    if mode == "float-existing":
+        # Snapshot geometry before changing any window, as tiling can reflow.
+        for window in windows:
+            if window["mapped"] and not window["floating"] and not window["fullscreen"]:
+                x, y = window["at"]
+                width, height = window["size"]
+                monitor = next(m for m in monitors if m["id"] == window["monitor"])
+                # Bring off-screen scrolling columns back into the work area.
+                mw, mh = monitor["width"], monitor["height"]
+                if monitor["transform"] % 2:
+                    mw, mh = mh, mw
+                mw, mh = round(mw / monitor["scale"]), round(mh / monitor["scale"])
+                left, top, right, bottom = monitor["reserved"]
+                width = min(width, mw - left - right)
+                height = min(height, mh - top - bottom)
+                x = max(monitor["x"] + left, min(x, monitor["x"] + mw - right - width))
+                y = max(monitor["y"] + top, min(y, monitor["y"] + mh - bottom - height))
+                place(window, x, y, width, height)
+        return
+    fractions = {
+        "left-two-thirds": (0, 2 / 3),
+        "right-third": (2 / 3, 1),
+        "left-half": (0, 1 / 2),
+        "right-half": (1 / 2, 1),
+    }
+    start, end = fractions[mode]
+    if len(sys.argv) > 2:
+        window = next((w for w in windows if w["address"] == sys.argv[2]), None)
+    else:
+        window = query("activewindow")
+    if not window or not window.get("address"):
+        return
+    monitor = next(m for m in monitors if m["id"] == window["monitor"])
+    width, height = monitor["width"], monitor["height"]
+    if monitor["transform"] % 2:
+        width, height = height, width
+    width, height = round(width / monitor["scale"]), round(height / monitor["scale"])
+    left, top, right, bottom = monitor["reserved"]
+    available = width - left - right
+    x1 = math.floor(available * start + 0.5)
+    x2 = math.floor(available * end + 0.5)
+    place(window, monitor["x"] + left + x1, monitor["y"] + top,
+          x2 - x1, height - top - bottom)
+
+
+if __name__ == "__main__":
+    main()
