@@ -22,7 +22,7 @@ def main():
     if not config.is_file():
         raise SystemExit("Install/configure Lua-based Omarchy first; hyprland.lua is missing.")
     pairs = []
-    for package in ("hypr", "bin"):
+    for package in ("hypr", "bin", "omarchy", "systemd"):
         package_root = ROOT / package
         for source in package_root.rglob("*"):
             if (source.is_file() and "__pycache__" not in source.parts

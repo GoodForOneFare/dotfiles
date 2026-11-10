@@ -52,6 +52,7 @@ def main():
         "right-third": (2 / 3, 1),
         "left-half": (0, 1 / 2),
         "right-half": (1 / 2, 1),
+        "maximize": (0, 1),
     }
     start, end = fractions[mode]
     if len(sys.argv) > 2:

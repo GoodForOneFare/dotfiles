@@ -59,6 +59,7 @@ class SnapTests(unittest.TestCase):
             'right-third': (1300, 70, 600, 1105),
             'left-half': (100, 70, 900, 1105),
             'right-half': (1000, 70, 900, 1105),
+            'maximize': (100, 70, 1800, 1105),
         }
         for mode, geometry in expected.items():
             with self.subTest(mode=mode), patch.object(module, 'query', side_effect=lambda name: data[name]), \

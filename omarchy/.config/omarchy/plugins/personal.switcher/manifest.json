@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "personal.switcher",
+  "name": "Personal window switcher",
+  "version": "1.0.0",
+  "author": "g",
+  "description": "Hold Super to cycle windows; release to select",
+  "kinds": [
+    "menu"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "menu": "Switcher.qml"
+  }
+}

@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""Quiet Ghostty screensaver: one Shopify bag, relocated every 30 seconds.
+
+This is a visual screensaver, NOT a lock screen. Omarchy still owns locking.
+"""
+import base64
+import json
+import os
+from pathlib import Path
+import random
+import select
+import signal
+import subprocess
+import sys
+import termios
+import time
+import tty
+
+IMAGE_ID = 31
+COLUMNS, ROWS = 8, 4
+INTERVAL = 30.0
+ESC = "\x1b"
+
+
+def query(name):
+    return json.loads(subprocess.check_output(["hyprctl", "-j", name], text=True, timeout=2))
+
+
+def image_sequence(encoded):
+    chunks = [encoded[i:i + 4096] for i in range(0, len(encoded), 4096)]
+    result = []
+    for index, chunk in enumerate(chunks):
+        more = int(index < len(chunks) - 1)
+        control = f"a=T,f=100,t=d,q=2,i={IMAGE_ID},c={COLUMNS},r={ROWS},m={more}" if index == 0 else f"m={more},q=2"
+        result.append(f"{ESC}_G{control};{chunk}{ESC}\\")
+    return "".join(result)
+
+
+def location(columns, rows, previous=None):
+    choices = (max(1, columns - COLUMNS - 2), max(1, rows - ROWS - 2))
+    for _ in range(10):
+        result = (random.randint(1, choices[0]), random.randint(1, choices[1]))
+        if result != previous:
+            return result
+    return result
+
+
+def main():
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
+        raise SystemExit("Run this through 'omarchy launch screensaver' in Ghostty.")
+    encoded = base64.b64encode((Path(__file__).resolve().parents[1] / "screensaver/shopify.png").read_bytes()).decode()
+    fd = sys.stdin.fileno()
+    saved = termios.tcgetattr(fd)
+    stop = False
+
+    def interrupted(*_):
+        nonlocal stop
+        stop = True
+
+    for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+        signal.signal(sig, interrupted)
+    previous = None
+    next_move = 0
+    size = None
+    # Optional bounded preview used for testing; not set during normal operation.
+    preview = float(os.environ.get("QUIET_SCREENSAVER_TEST_SECONDS", "0") or "0")
+    deadline = time.monotonic() + preview if preview > 0 else float("inf")
+    try:
+        tty.setraw(fd)
+        # Black background, alternate screen, hide the text cursor. Do not alter
+        # the compositor's global pointer state or any authentication surface.
+        sys.stdout.write(f"{ESC}]11;rgb:00/00/00\x07{ESC}[?1049h{ESC}[?25l{ESC}[40m{ESC}[2J")
+        sys.stdout.flush()
+        while not stop and time.monotonic() < deadline:
+            new_size = os.get_terminal_size(sys.stdout.fileno())
+            if new_size != size or time.monotonic() >= next_move:
+                size = new_size
+                previous = location(size.columns, size.lines, previous)
+                x, y = previous
+                sys.stdout.write(f"{ESC}_Ga=d,d=I,i={IMAGE_ID},q=2;{ESC}\\{ESC}[2J{ESC}[{y};{x}H" + image_sequence(encoded))
+                sys.stdout.flush()
+                next_move = time.monotonic() + INTERVAL
+            if select.select([fd], [], [], 0.5)[0]:
+                os.read(fd, 1024)
+                break
+            try:
+                if query("activewindow").get("class") != "org.omarchy.screensaver":
+                    break
+            except (subprocess.SubprocessError, ValueError):
+                break
+    finally:
+        termios.tcsetattr(fd, termios.TCSANOW, saved)
+        sys.stdout.write(f"{ESC}_Ga=d,d=I,i={IMAGE_ID},q=2;{ESC}\\{ESC}[0m{ESC}[?25h{ESC}[?1049l")
+        sys.stdout.flush()
+        # Dismiss the other display's screensavers, never arbitrary windows or
+        # the lock surface. Exclude this terminal so cleanup can finish first.
+        try:
+            for window in query("clients"):
+                if window.get("class") == "org.omarchy.screensaver" and window.get("pid") != os.getppid():
+                    selector = json.dumps("address:" + window["address"])
+                    subprocess.run(["hyprctl", "dispatch", f"hl.dsp.window.close({{window={selector}}})"],
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2)
+        except (subprocess.SubprocessError, ValueError):
+            pass
+
+
+if __name__ == "__main__":
+    main()

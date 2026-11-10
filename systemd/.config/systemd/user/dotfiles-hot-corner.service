@@ -1,0 +1,15 @@
+[Unit]
+Description=Bottom-left Stay Awake hot corner
+PartOf=graphical-session.target
+Requires=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.local/bin/hot-corner
+ExecStopPost=-/usr/bin/python3 %h/.local/bin/hot-corner --cleanup
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=5
+Slice=session.slice

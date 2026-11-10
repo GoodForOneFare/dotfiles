@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+"""Focus and raise a validated selection from the personal shell switcher."""
+import json
+import re
+import subprocess
+import sys
+
+
+def focus(address):
+    if not re.fullmatch(r"0x[0-9a-fA-F]+", address):
+        return
+    clients = json.loads(subprocess.check_output(["hyprctl", "-j", "clients"], text=True, timeout=3))
+    window = next((w for w in clients if w["address"] == address and w.get("mapped")), None)
+    if not window:
+        return  # The selected window closed while the switcher was open.
+    target = json.dumps("address:" + address)
+    expressions = []
+    if not window.get("floating") and not window.get("fullscreen"):
+        # Tiled windows always render below floating ones, so raising alone
+        # cannot foreground them. Float in place, keeping current geometry.
+        (x, y), (width, height) = window["at"], window["size"]
+        expressions += [
+            f'hl.dsp.window.float({{window={target}, action="on"}})',
+            f'hl.dsp.window.resize({{window={target}, x={int(width)}, y={int(height)}, relative=false}})',
+            f'hl.dsp.window.move({{window={target}, x={int(x)}, y={int(y)}, relative=false}})',
+        ]
+    for expression in expressions + [
+        f'hl.dsp.focus({{window={target}}})',
+        f'hl.dsp.window.alter_zorder({{window={target}, mode="top"}})',
+    ]:
+        subprocess.run(["hyprctl", "dispatch", expression], check=True, timeout=3)
+
+
+if __name__ == "__main__" and len(sys.argv) == 3 and sys.argv[1] == "focus":
+    focus(sys.argv[2])

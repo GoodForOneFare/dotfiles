@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+"""Keep Omarchy awake while the pointer rests in a display's bottom-left corner."""
+import argparse
+import json
+import os
+from pathlib import Path
+import signal
+import subprocess
+import time
+
+ZONE = 6  # logical pixels; forgiving enough for a trackpad
+
+
+def identity(path):
+    try:
+        stat = path.stat()
+        return [stat.st_dev, stat.st_ino, stat.st_mtime_ns]
+    except FileNotFoundError:
+        return None
+
+
+class StayAwakeLease:
+    """Own only a marker we created; preserve prior or subsequent manual claims."""
+    def __init__(self, marker, lease):
+        self.marker, self.lease = Path(marker), Path(lease)
+
+    def acquire(self):
+        self.marker.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            # Omarchy's supported Stay Awake marker is watched by its idle
+            # service. Exclusive creation avoids overwriting a manual request.
+            fd = os.open(self.marker, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        except FileExistsError:
+            return False
+        with os.fdopen(fd, 'w') as handle:
+            handle.write('')
+            stat = os.fstat(handle.fileno())
+            token = [stat.st_dev, stat.st_ino, stat.st_mtime_ns]
+        self.lease.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        self.lease.write_text(json.dumps(token))
+        return True
+
+    def release(self):
+        try:
+            token = json.loads(self.lease.read_text())
+        except FileNotFoundError:
+            return
+        if identity(self.marker) == token:
+            self.marker.unlink(missing_ok=True)
+        self.lease.unlink(missing_ok=True)
+
+
+def in_corner(cursor, monitors, zone=ZONE):
+    for monitor in monitors:
+        if monitor.get('disabled') or monitor.get('mirrorOf', 'none') != 'none':
+            continue
+        width, height = monitor['width'], monitor['height']
+        if monitor.get('transform', 0) % 2:
+            width, height = height, width
+        width, height = width / monitor['scale'], height / monitor['scale']
+        x, y = cursor['x'] - monitor['x'], cursor['y'] - monitor['y']
+        if 0 <= x < min(zone, width) and max(0, height - zone) <= y < height:
+            return True
+    return False
+
+
+def query(name):
+    return json.loads(subprocess.check_output(['/usr/bin/hyprctl', '-j', name], text=True, timeout=2))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--cleanup', action='store_true')
+    args = parser.parse_args()
+    runtime = Path(os.environ['XDG_RUNTIME_DIR']) / 'dotfiles-hot-corner'
+    lease = StayAwakeLease(Path.home() / '.local/state/omarchy/indicators/stay-awake', runtime / 'lease.json')
+    # Recover a prior crashed daemon's own marker, never a manual one.
+    lease.release()
+    if args.cleanup:
+        return
+    running = True
+
+    def stop(*_):
+        nonlocal running
+        running = False
+
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGINT, stop)
+    inside = False
+    try:
+        while running:
+            try:
+                now_inside = in_corner(query('cursorpos'), query('monitors'))
+            except (subprocess.SubprocessError, ValueError, KeyError, OSError):
+                now_inside = False  # fail safe: do not leave idle suppressed
+            if now_inside and not inside:
+                owned = lease.acquire()
+                print('Hot corner entered' + ('; Stay Awake enabled' if owned else '; existing Stay Awake preserved'), flush=True)
+            elif inside and not now_inside:
+                lease.release()
+                print('Hot corner left; own Stay Awake request released', flush=True)
+            inside = now_inside
+            time.sleep(0.5)
+    finally:
+        lease.release()
+
+
+if __name__ == '__main__':
+    main()

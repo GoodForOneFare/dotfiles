@@ -22,3 +22,4 @@ o.bind("MOD3 + 1", "Snap window to left two-thirds", snap_window("left-two-third
 o.bind("MOD3 + 2", "Snap window to right third", snap_window("right-third"))
 o.bind("MOD3 + LEFT", "Snap window to left half", snap_window("left-half"))
 o.bind("MOD3 + RIGHT", "Snap window to right half", snap_window("right-half"))
+o.rebind("MOD3 + SPACE", "Fill screen without fullscreen", snap_window("maximize"))
