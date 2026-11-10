@@ -17,6 +17,11 @@ class LinkTests(unittest.TestCase):
             config.parent.mkdir(parents=True)
             original = 'require("default.hypr.toggles")\n-- My own setting\n'
             config.write_text(original)
+            monitors = home / '.config/hypr/monitors.lua'
+            monitors_original = ('local omarchy_monitor_scale = 1.6\n'
+                                 'hl.monitor({ output = "", mode = "preferred", position = "auto", '
+                                 'scale = omarchy_monitor_scale })\n')
+            monitors.write_text(monitors_original)
             helper = home / '.local/bin/window-snap'
             helper.parent.mkdir(parents=True)
             helper.write_text('old helper')
@@ -32,13 +37,24 @@ class LinkTests(unittest.TestCase):
             self.assertTrue(body.rstrip().endswith('require("hypr.personal")'))
             self.assertTrue(helper.is_symlink())
             self.assertFalse((home / '.local/bin/__pycache__').exists())
+            screens = monitors.read_text()
+            self.assertTrue(screens.startswith(monitors_original))  # catch-all kept for externals
+            self.assertEqual(screens.count('output = "eDP-1"'), 1)
+            self.assertIn('scale = 1.5', screens.splitlines()[-1])
             run('--check')
             run()
             self.assertEqual(config.read_text(), body)
+            self.assertEqual(monitors.read_text(), screens)
+            monitors.write_text(monitors_original)
+            with self.assertRaises(subprocess.CalledProcessError):
+                run('--check')  # e.g. Omarchy refreshed monitors.lua
+            run()
+            self.assertEqual(monitors.read_text(), screens)
             saved = list((home / '.local/state/dotfiles/backups').glob('*/.local/bin/window-snap'))
             self.assertEqual(saved[0].read_text(), 'old helper')
             run('--remove')
             self.assertEqual(config.read_text(), original)
+            self.assertEqual(monitors.read_text(), monitors_original)
             self.assertFalse(helper.exists())
 
 

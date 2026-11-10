@@ -1,5 +1,4 @@
 -- Loaded after Omarchy defaults, user settings, and plugins.
-require("hypr.personal.display")
 require("hypr.personal.nightlight")
 require("hypr.personal.appearance")
 require("hypr.personal.input")

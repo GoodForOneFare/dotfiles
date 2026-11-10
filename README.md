@@ -55,7 +55,6 @@ Do not repeat these overrides in the regular input/bindings/looknfeel files.
 ```text
 hypr/.config/hypr/personal.lua
 hypr/.config/hypr/personal/
-  display.lua      # Built-in eDP-1 at native resolution, 1.5x (1920x1200 logical)
   nightlight.lua   # Start the stock hyprsunset user service at each login
   appearance.lua   # Zero gaps/borders, opaque windows, 50% scrolling columns
   input.lua        # Caps Lock as Hyper, fingers-down scrolls down
@@ -254,7 +253,23 @@ Commit and push changes yourself when ready; setup never commits or pushes.
 This repository retains its ancient Git history, but its HEAD was already empty
 when this desktop layer was added.
 
-`personal/display.lua` overrides the built-in `eDP-1` display to 1.5x scaling.
-Change or disable that module on a different machine. Other monitor settings
-remain in the normal `~/.config/hypr/monitors.lua`. This isn't a complete machine
+## Built-in display scale
+
+The built-in `eDP-1` display runs at native 2880×1800 with **1.5×** scaling
+(1920×1200 logical). The rule lives in `~/.config/hypr/monitors.lua` because
+Omarchy's wake/clamshell helper (`omarchy-hyprland-monitor-clamshell`, run on
+every idle-wake, unlock and lid change) reads only that file and reapplies its
+scale. A rule elsewhere loaded at startup but reverted to 1.6× after each wake.
+
+`link.py` appends one tagged line to `monitors.lua`, like the loader line in
+`hyprland.lua`, and leaves the rest of the file alone:
+
+```lua
+hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.5 }) -- dotfiles: built-in display scale
+```
+
+External displays keep the catch-all rule and `omarchy_monitor_scale`.
+`--remove` deletes only that line. If Omarchy refreshes `monitors.lua`,
+`./setup.sh --check` fails until you rerun `./setup.sh`. Change `DISPLAY` in
+`link.py` on a machine with a different panel. This isn't a complete machine
 backup. No Ghostty shortcut edits or Hyprshell install were performed.
