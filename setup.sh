@@ -68,4 +68,6 @@ elif [[ "$mode" != --check ]]; then
   systemctl --user restart hyprsunset.service
   systemctl --user daemon-reload
   systemctl --user restart dotfiles-hot-corner.service
+  # Solid black wallpaper, through Omarchy's supported background command.
+  omarchy theme bg set "$HOME/.config/omarchy/personal/backgrounds/black.png"
 fi

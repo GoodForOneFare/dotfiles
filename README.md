@@ -145,6 +145,16 @@ Do not run this test while typing or with an authentication prompt focused. Afte
 editing symlinked plugin source, `omarchy restart shell` reliably clears the
 shell's component cache (this does not restart the desktop session).
 
+## Black wallpaper
+
+`omarchy/.config/omarchy/personal/backgrounds/black.png` is a solid black
+2880×1800 PNG. `setup.sh` applies it with `omarchy theme bg set`, Omarchy's
+supported background command; the choice persists across reboots. Changing the
+theme or cycling backgrounds (`omarchy theme bg next`) picks a theme wallpaper
+instead. Rerun `./setup.sh` or
+`omarchy theme bg set ~/.config/omarchy/personal/backgrounds/black.png` to
+restore black.
+
 ## Quiet screensaver
 
 The stock Omarchy launcher and idle/lock timings are unchanged. For terminals
