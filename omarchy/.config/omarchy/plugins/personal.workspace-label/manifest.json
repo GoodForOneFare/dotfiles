@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "personal.workspace-label",
+  "name": "Workspace label",
+  "version": "1.0.0",
+  "author": "g",
+  "description": "Dim workspace name drawn on the desktop, behind windows",
+  "kinds": [
+    "service"
+  ],
+  "entryPoints": {
+    "service": "Label.qml"
+  }
+}

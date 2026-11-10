@@ -16,7 +16,9 @@ done
 if [[ "$mode" == --remove ]]; then
   # Clean up our idle request while its executable is still linked.
   systemctl --user stop dotfiles-hot-corner.service || true
-  omarchy plugin disable personal.switcher || true
+  for id in personal.switcher personal.workspace-label; do
+    omarchy plugin disable "$id" || true
+  done
   python3 "$repo/link.py" --remove
 elif [[ "$mode" == --check ]]; then
   python3 "$repo/link.py" --check
@@ -24,9 +26,11 @@ elif [[ "$mode" == --check ]]; then
   omarchy plugin list | grep -E '^io\.github\.nchudleigh\.omac[[:space:]]+enabled' >/dev/null || {
     echo "omac is not enabled" >&2; exit 1;
   }
-  omarchy plugin list | grep -E '^personal\.switcher[[:space:]]+enabled' >/dev/null || {
-    echo "personal.switcher is not enabled" >&2; exit 1;
-  }
+  for id in personal.switcher personal.workspace-label; do
+    omarchy plugin list | grep -E "^${id//./\\.}[[:space:]]+enabled" >/dev/null || {
+      echo "$id is not enabled" >&2; exit 1;
+    }
+  done
 else
   if [[ ! -d "$plugin" ]]; then
     mkdir -p "$(dirname "$plugin")"
@@ -46,11 +50,13 @@ else
   omarchy-shell shell rescanPlugins
   omarchy plugin enable io.github.nchudleigh.omac
   # Discovery is asynchronous after new files are linked.
-  for _ in {1..50}; do
-    if omarchy plugin list | grep -E '^personal\.switcher[[:space:]]' >/dev/null; then break; fi
-    sleep 0.1
+  for id in personal.switcher personal.workspace-label; do
+    for _ in {1..50}; do
+      if omarchy plugin list | grep -E "^${id//./\\.}[[:space:]]" >/dev/null; then break; fi
+      sleep 0.1
+    done
+    omarchy plugin enable "$id"
   done
-  omarchy plugin enable personal.switcher
 fi
 if [[ "$mode" != --check ]]; then
   hyprctl reload

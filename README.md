@@ -155,6 +155,14 @@ instead. Rerun `./setup.sh` or
 `omarchy theme bg set ~/.config/omarchy/personal/backgrounds/black.png` to
 restore black.
 
+Each display also shows a dim gray **"Workspace N"** label in the center of the
+desktop, updated live as you switch workspaces. It is a small shell plugin
+(`omarchy/.config/omarchy/plugins/personal.workspace-label/`) on the layer just
+above the wallpaper: windows always cover it, and clicks pass through to the
+desktop. Special (scratchpad) workspaces keep the underlying workspace's label.
+Change the color or size in `Label.qml`; disable with
+`omarchy plugin disable personal.workspace-label`.
+
 ## Quiet screensaver
 
 The stock Omarchy launcher and idle/lock timings are unchanged. For terminals
