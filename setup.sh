@@ -31,6 +31,9 @@ elif [[ "$mode" == --check ]]; then
       echo "$id is not enabled" >&2; exit 1;
     }
   done
+  omarchy plugin list | grep -E '^omarchy\.dock[[:space:]]+disabled' >/dev/null || {
+    echo "omarchy.dock is not disabled" >&2; exit 1;
+  }
   [[ $(omarchy hyprland workspace layout default) == floating ]] || {
     echo "Default workspace layout is not floating" >&2; exit 1;
   }
@@ -83,4 +86,7 @@ elif [[ "$mode" != --check ]]; then
   # workspace layout opens windows tiled, below every floating window. Busy
   # workspaces keep their own saved layout; switch those with Super+L.
   omarchy hyprland workspace layout default floating
+  # No dock: Omarchy shows it on floating workspaces, and the switcher covers
+  # window selection. Recorded in shell.json's disabledPlugins.
+  omarchy plugin disable omarchy.dock
 fi

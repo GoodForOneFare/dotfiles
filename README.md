@@ -146,6 +146,13 @@ A workspace that already has windows keeps its own saved layout: switch it with
 **Super+L** (or `omarchy hyprland workspace layout toggle`) until it reports
 floating. Saved layouts live in `~/.local/state/omarchy/workspace-layouts/`.
 
+Omarchy's **dock** (the launcher bar at the bottom middle) appears only on
+floating workspaces. `setup.sh` disables it completely with
+`omarchy plugin disable omarchy.dock` (recorded in `shell.json` under
+`disabledPlugins`), and `--check` verifies it. Because Super+M minimizes a
+window *to the dock*, the layer unbinds Super+M so no window can be lost.
+Re-enable with `omarchy plugin enable omarchy.dock`.
+
 Focus failures from the switcher are logged to
 `~/.local/state/dotfiles/window-picker.log`.
 
