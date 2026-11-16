@@ -187,6 +187,19 @@ desktop. Special (scratchpad) workspaces keep the underlying workspace's label.
 Change the color or size in `Label.qml`; disable with
 `omarchy plugin disable personal.workspace-label`.
 
+## Ghostty split dimming
+
+`ghostty/.config/ghostty/personal.conf` makes the focused split obvious,
+iTerm-style: inactive splits get an 18% neutral-gray wash
+(`unfocused-split-fill = #808080`, `unfocused-split-opacity = 0.82`) and a
+slightly brighter divider. Ghostty's default fill is the background color,
+which is nearly invisible on dark themes. Lower the opacity for stronger dimming.
+
+`link.py` appends one include line, last, to `~/.config/ghostty/config` so these
+settings override the theme; nothing else in that file changes. Ghostty has no
+inline comments, so that line is untagged. Apply edits with
+`omarchy restart terminal`; check with `ghostty +validate-config`.
+
 ## Quiet screensaver
 
 The stock Omarchy launcher and idle/lock timings are unchanged. For terminals

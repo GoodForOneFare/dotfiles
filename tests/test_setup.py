@@ -22,6 +22,10 @@ class LinkTests(unittest.TestCase):
                                  'hl.monitor({ output = "", mode = "preferred", position = "auto", '
                                  'scale = omarchy_monitor_scale })\n')
             monitors.write_text(monitors_original)
+            ghostty = home / '.config/ghostty/config'
+            ghostty.parent.mkdir(parents=True)
+            ghostty_original = 'font-size = 9\nconfig-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"\n'
+            ghostty.write_text(ghostty_original)
             helper = home / '.local/bin/window-snap'
             helper.parent.mkdir(parents=True)
             helper.write_text('old helper')
@@ -41,6 +45,10 @@ class LinkTests(unittest.TestCase):
             self.assertTrue(screens.startswith(monitors_original))  # catch-all kept for externals
             self.assertEqual(screens.count('output = "eDP-1"'), 1)
             self.assertIn('scale = 1.5', screens.splitlines()[-1])
+            term = ghostty.read_text()
+            self.assertTrue(term.startswith(ghostty_original))
+            self.assertIn('personal.conf', term.splitlines()[-1])  # last, so it wins over the theme
+            self.assertTrue((home / '.config/ghostty/personal.conf').is_symlink())
             run('--check')
             run()
             self.assertEqual(config.read_text(), body)
@@ -55,6 +63,7 @@ class LinkTests(unittest.TestCase):
             run('--remove')
             self.assertEqual(config.read_text(), original)
             self.assertEqual(monitors.read_text(), monitors_original)
+            self.assertEqual(ghostty.read_text(), ghostty_original)
             self.assertFalse(helper.exists())
 
 

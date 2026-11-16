@@ -18,10 +18,22 @@ DISPLAY = ('hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto"
            'scale = 1.5 }) ' + DISPLAY_TAG)
 
 
-def with_display_rule(body, remove=False):
-    lines = [line for line in body.splitlines() if DISPLAY_TAG not in line]
+# Ghostty has no inline comments (one would become part of the path), so the
+# include line is its own marker.
+GHOSTTY = GHOSTTY_TAG = 'config-file = ?"~/.config/ghostty/personal.conf"'
+# (file relative to HOME, tag, line): one tagged line kept at the end of a
+# user-owned file. Nothing else in those files is touched.
+TAILS = [
+    (".config/hypr/monitors.lua", DISPLAY_TAG, DISPLAY),
+    (".config/ghostty/config", GHOSTTY_TAG, GHOSTTY),
+]
+
+
+def with_tail(body, tag, line, remove=False):
+    lines = [existing for existing in body.splitlines() if tag not in existing]
     updated = "\n".join(lines).rstrip() + "\n"
-    return updated if remove else updated + "\n" + DISPLAY + "\n"
+    return updated if remove else updated + "\n" + line + "\n"
+
 
 
 def main():
@@ -35,15 +47,15 @@ def main():
     if not config.is_file():
         raise SystemExit("Install/configure Lua-based Omarchy first; hyprland.lua is missing.")
     pairs = []
-    for package in ("hypr", "bin", "omarchy", "systemd"):
+    for package in ("hypr", "bin", "omarchy", "systemd", "ghostty"):
         package_root = ROOT / package
         for source in package_root.rglob("*"):
             if (source.is_file() and "__pycache__" not in source.parts
                     and source.suffix != ".pyc"):
                 pairs.append((source, HOME / source.relative_to(package_root)))
     body = config.read_text()
-    monitors = HOME / ".config/hypr/monitors.lua"
-    monitors_body = monitors.read_text() if monitors.is_file() else ""
+    tails = [(HOME / rel, tag, line) for rel, tag, line in TAILS]
+    tail_bodies = {path: path.read_text() if path.is_file() else "" for path, _, _ in tails}
     if args.check:
         errors = []
         for source, target in pairs:
@@ -53,11 +65,13 @@ def main():
         active_lines = [line.strip() for line in lines if line.strip() and not line.lstrip().startswith("--")]
         if active_lines.count(LOADER) != 1 or active_lines[-1:] != [LOADER]:
             errors.append("Personal loader must appear once, at the end of hyprland.lua")
-        if monitors_body.splitlines().count(DISPLAY) != 1 or with_display_rule(monitors_body) != monitors_body:
-            errors.append("Built-in display rule must appear once, at the end of monitors.lua")
+        for path, tag, line in tails:
+            text = tail_bodies[path]
+            if text.splitlines().count(line) != 1 or with_tail(text, tag, line) != text:
+                errors.append(f"Managed line must appear once, at the end of {path}")
         if errors:
             raise SystemExit("\n".join(errors))
-        print("All links, the final loader and the display rule are correct.")
+        print("All links, the final loader and managed lines are correct.")
         return
     backup_root = HOME / ".local/state/dotfiles/backups"
     backup_root.mkdir(parents=True, exist_ok=True)
@@ -90,14 +104,16 @@ def main():
     if updated != body:
         preserve(config)
         config.write_text(updated)
-    # Likewise manage only our one tagged display rule in monitors.lua.
-    if monitors.is_file() or not args.remove:
-        updated = with_display_rule(monitors_body, remove=args.remove)
-        if updated != monitors_body:
-            if monitors.is_file():
-                preserve(monitors)
-            monitors.parent.mkdir(parents=True, exist_ok=True)
-            monitors.write_text(updated)
+    # Likewise manage only our one tagged line in each of those files.
+    for path, tag, line in tails:
+        if path.is_file() or not args.remove:
+            text = tail_bodies[path]
+            updated = with_tail(text, tag, line, remove=args.remove)
+            if updated != text:
+                if path.is_file():
+                    preserve(path)
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(updated)
     print(f"Backup of replaced files: {backup}")
     print("Personal layer removed." if args.remove else "Personal layer linked.")
 
