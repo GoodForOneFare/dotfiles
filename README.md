@@ -116,11 +116,15 @@ using a personal plugin that inherits Omarchy 4.5's theme-aware menu surface.
   starts with instances of the currently focused app. These replace the Quake
   console and move-to-Quake-console bindings.
 - Escape cancels without changing focus.
+- **Alt+Tab**, **Alt+Shift+Tab** and **Alt+`** do the same, released with
+  either Alt (replaces Omarchy's Alt+Tab focus-next/raise). Right Alt alone
+  stays push-to-talk dictation: only left Alt has a compositor release bind,
+  while the open modal handles both.
 
 No typing, arrows, or Enter are needed. Windows across workspaces are listed in
 recent-use order, with the previous window highlighted first. Super+1..9 still
-selects workspaces; Super+Ctrl+Tab returns to the former workspace. Alt+Tab is
-unchanged.
+selects workspaces; Super+Ctrl+Tab returns to the former workspace.
+
 
 The plugin lives in `omarchy/.config/omarchy/plugins/personal.switcher/` and is
 enabled by setup. Native Hyprland global shortcuts preserve press/release

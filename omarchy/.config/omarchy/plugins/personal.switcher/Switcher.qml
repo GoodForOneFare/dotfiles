@@ -22,7 +22,7 @@ Stock.Menu {
         Keys.onReleased: function(event) {
             if (picker.opened && !event.isAutoRepeat
                     && (event.key === Qt.Key_Meta || event.key === Qt.Key_Super_L
-                        || event.key === Qt.Key_Super_R)) {
+                        || event.key === Qt.Key_Super_R || event.key === Qt.Key_Alt)) {
                 event.accepted = true
                 picker.open('{"action":"commit"}')
             }
