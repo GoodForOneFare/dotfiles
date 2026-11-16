@@ -135,6 +135,20 @@ before the float-all rule applied) is first floated in place, keeping its
 current position and size. No extra package or
 daemon is required, and no packaged UI source is modified.
 
+### Floating workspace layout
+
+Omarchy 4.5 added per-workspace layouts (dwindle, scrolling, floating). A
+workspace on a tiled layout opens new windows **tiled**, beneath every floating
+window, which the float-all window rule alone does not prevent. `setup.sh`
+therefore sets the default layout to floating with
+`omarchy hyprland workspace layout default floating`, and `--check` verifies it.
+A workspace that already has windows keeps its own saved layout: switch it with
+**Super+L** (or `omarchy hyprland workspace layout toggle`) until it reports
+floating. Saved layouts live in `~/.local/state/omarchy/workspace-layouts/`.
+
+Focus failures from the switcher are logged to
+`~/.local/state/dotfiles/window-picker.log`.
+
 The plugin depends on Omarchy 4.5's menu component API: revalidate on upgrades.
 Run `node tests/test_switcher_model.js` for MRU navigation, wraparound,
 highlighted-app cycling, duplicate titles and markup-safety checks.

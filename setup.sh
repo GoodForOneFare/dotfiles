@@ -31,6 +31,9 @@ elif [[ "$mode" == --check ]]; then
       echo "$id is not enabled" >&2; exit 1;
     }
   done
+  [[ $(omarchy hyprland workspace layout default) == floating ]] || {
+    echo "Default workspace layout is not floating" >&2; exit 1;
+  }
 else
   if [[ ! -d "$plugin" ]]; then
     mkdir -p "$(dirname "$plugin")"
@@ -76,4 +79,8 @@ elif [[ "$mode" != --check ]]; then
   systemctl --user restart dotfiles-hot-corner.service
   # Solid black wallpaper, through Omarchy's supported background command.
   omarchy theme bg set "$HOME/.config/omarchy/personal/backgrounds/black.png"
+  # Floating workspaces by default (Omarchy 4.5 workspace modes). A tiled
+  # workspace layout opens windows tiled, below every floating window. Busy
+  # workspaces keep their own saved layout; switch those with Super+L.
+  omarchy hyprland workspace layout default floating
 fi

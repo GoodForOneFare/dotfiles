@@ -12,6 +12,7 @@ def focus(address):
     clients = json.loads(subprocess.check_output(["hyprctl", "-j", "clients"], text=True, timeout=3))
     window = next((w for w in clients if w["address"] == address and w.get("mapped")), None)
     if not window:
+        log(f"focus {address} skipped: window no longer mapped")
         return  # The selected window closed while the switcher was open.
     target = json.dumps("address:" + address)
     expressions = []
@@ -31,5 +32,21 @@ def focus(address):
         subprocess.run(["hyprctl", "dispatch", expression], check=True, timeout=3)
 
 
+def log(message):
+    # The shell starts this detached, so failures would otherwise be invisible.
+    import os, time
+    from pathlib import Path
+    path = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "dotfiles/window-picker.log"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists() and path.stat().st_size > 256_000:
+        path.write_text("")
+    with path.open("a") as handle:
+        handle.write(time.strftime("%Y-%m-%dT%H:%M:%S ") + message + "\n")
+
+
 if __name__ == "__main__" and len(sys.argv) == 3 and sys.argv[1] == "focus":
-    focus(sys.argv[2])
+    try:
+        focus(sys.argv[2])
+    except Exception as error:
+        log(f"focus {sys.argv[2]} failed: {error!r}")
+        raise
