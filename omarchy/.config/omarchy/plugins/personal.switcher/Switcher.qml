@@ -17,6 +17,21 @@ Stock.Menu {
     // not bubble back to this root Item. Forward its focused input's events
     // directly to our release handler, retaining the stock press handler.
     property bool releaseHandlerInstalled: false
+    property var pointerShield: null
+    // Cover only this menu's surface, not the stock menu or desktop. Keep
+    // keyboard focus on the stock input while swallowing all pointer input.
+    Component {
+        id: pointerShieldComponent
+        MouseArea {
+            anchors.fill: parent
+            z: 100000
+            hoverEnabled: true
+            acceptedButtons: Qt.AllButtons
+            preventStealing: true
+            cursorShape: Qt.ArrowCursor
+            onWheel: function(wheel) { wheel.accepted = true }
+        }
+    }
     Item {
         id: releaseHandler
         Keys.onReleased: function(event) {
@@ -36,7 +51,12 @@ Stock.Menu {
             releaseHandlerInstalled = true
             return true
         }
-        if (object.contentItem && installReleaseHandler(object.contentItem)) return true
+        if (object.contentItem) {
+            // The first contentItem is the stock OverlayWindow's visual root.
+            if (!pointerShield)
+                pointerShield = pointerShieldComponent.createObject(object.contentItem)
+            if (installReleaseHandler(object.contentItem)) return true
+        }
         var children = object.data || object.children || []
         for (var i = 0; i < children.length; i++) {
             if (installReleaseHandler(children[i])) return true
@@ -83,7 +103,8 @@ Stock.Menu {
                                selected: clients.length ? clients[selectedIndex].address : "",
                                app: clients.length ? clients[selectedIndex].class : "",
                                count: clients.length, allCount: allClients.length, filterApp: filterApp,
-                               releaseHandlerInstalled: releaseHandlerInstalled})
+                               releaseHandlerInstalled: releaseHandlerInstalled,
+                               pointerShieldInstalled: pointerShield !== null})
     }
 
     function move(step, sameApp) {

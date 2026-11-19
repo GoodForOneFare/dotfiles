@@ -57,7 +57,7 @@ hypr/.config/hypr/personal.lua
 hypr/.config/hypr/personal/
   nightlight.lua   # Start the stock hyprsunset user service at each login
   appearance.lua   # Zero gaps/borders, opaque windows, 50% scrolling columns
-  input.lua        # Caps Lock as Hyper, fingers-down scrolls down, scroll speed 0.7
+  input.lua        # Hyper, scroll speed 0.7, fingers-down scrolls down, no pointer warps
   windows.lua      # Floating defaults and Rectangle-style snapping
   editing.lua      # Native Alt+Backspace in terminals; Ctrl+Backspace elsewhere
   screensaver.lua  # Quiet animation substitution and modifier-key dismissal
@@ -120,6 +120,13 @@ using a personal plugin that inherits Omarchy 4.5's theme-aware menu surface.
   either Alt (replaces Omarchy's Alt+Tab focus-next/raise). Right Alt alone
   stays push-to-talk dictation: only left Alt has a compositor release bind,
   while the open modal handles both.
+
+The switcher is keyboard-only: pointer movement, clicks (including outside the
+card), and scrolling do not select, activate, or dismiss anything. A pointer
+shield covers only the personal switcher's surface; other menus are unchanged.
+The personal input config disables Hyprland's automatic pointer warping, so
+switching windows leaves the pointer where you put it (also for other
+keyboard-driven focus changes).
 
 No typing, arrows, or Enter are needed. Windows across workspaces are listed in
 recent-use order, with the previous window highlighted first. Windows behind a
@@ -302,6 +309,7 @@ upgrade changes the Lua API, review this layer rather than blindly replaying it.
 ```sh
 python3 -m unittest discover -s tests -v
 lua tests/test_screensaver_bindings.lua
+lua tests/test_input.lua
 bash -n setup.sh
 ```
 
