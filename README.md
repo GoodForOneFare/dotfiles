@@ -57,7 +57,7 @@ hypr/.config/hypr/personal.lua
 hypr/.config/hypr/personal/
   nightlight.lua   # Start the stock hyprsunset user service at each login
   appearance.lua   # Zero gaps/borders, opaque windows, 50% scrolling columns
-  input.lua        # Caps Lock as Hyper, fingers-down scrolls down
+  input.lua        # Caps Lock as Hyper, fingers-down scrolls down, scroll speed 0.7
   windows.lua      # Floating defaults and Rectangle-style snapping
   editing.lua      # Native Alt+Backspace in terminals; Ctrl+Backspace elsewhere
   screensaver.lua  # Quiet animation substitution and modifier-key dismissal

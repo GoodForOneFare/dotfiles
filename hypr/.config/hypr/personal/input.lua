@@ -3,6 +3,7 @@
 hl.config({
   input = {
     kb_options = "caps:hyper,shift:both_capslock_cancel",
-    touchpad = { natural_scroll = false },
+    -- Less restrained than Omarchy's 0.4; leave scrolling direction unchanged.
+    touchpad = { natural_scroll = false, scroll_factor = 0.7 },
   },
 })
