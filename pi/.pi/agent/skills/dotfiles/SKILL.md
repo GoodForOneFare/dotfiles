@@ -1,13 +1,16 @@
 ---
 name: dotfiles
 description: >
-  The user's personal Omarchy/Hyprland desktop layer, kept in the dotfiles repo
-  ~/src/github.com/GoodForOneFare/dotfiles and symlinked into $HOME. Use for ANY
-  change to this machine's desktop, window management, keybindings, window
-  switcher, snapping, display scale, wallpaper, workspace label, dock, night
-  light, screensaver, hot corner, or Ghostty settings, and for committing or
-  pushing dotfiles. Use alongside the omarchy skill; this one decides where
-  changes are saved and how they are validated and pushed.
+  REQUIRED with the omarchy skill on this machine. The user's personal
+  Omarchy/Hyprland layer lives in the dotfiles repo
+  ~/src/github.com/GoodForOneFare/dotfiles, symlinked into $HOME. Use for ANY
+  edit under ~/.config/hypr, ~/.config/omarchy, ~/.config/ghostty,
+  ~/.config/systemd/user, ~/.local/bin or ~/.pi/agent, and for any change to
+  desktop behavior: keybindings, window switcher, snapping, display scale,
+  wallpaper, workspace label, dock, night light, screensaver, hot corner or
+  Ghostty. Also use it to commit or push dotfiles. The omarchy skill explains
+  how Omarchy works; this one says where changes are saved and how they are
+  validated, committed and pushed.
 ---
 
 # Personal dotfiles layer

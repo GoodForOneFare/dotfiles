@@ -211,6 +211,12 @@ apply and validate them, the commit-and-push workflow, and lessons learned. It
 points back to this README for details, so update both when behavior changes.
 Run `/reload` in an open session after editing it.
 
+The stock `omarchy` skill is a symlink into `/usr/share/omarchy`, which updates
+replace, so it isn't edited. Instead, `pi/.pi/agent/AGENTS.md`, linked as the
+user-wide `~/.pi/agent/AGENTS.md`, tells every session to load `dotfiles`
+whenever it uses `omarchy` or edits `~/.config`. It is kept to a few lines
+because it loads in every session.
+
 ## Quiet screensaver
 
 The stock Omarchy launcher and idle/lock timings are unchanged. For terminals
