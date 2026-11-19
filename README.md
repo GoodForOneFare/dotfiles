@@ -34,7 +34,7 @@ Existing replaced files are backed up under `~/.local/state/dotfiles/backups/`.
 On validation failure, inspect that backup and restore the previous configs;
 the script does not claim to automatically undo all plugin installation effects.
 
-The directories use GNU Stow's package layout (`hypr/` and `bin/`), but the
+The directories use GNU Stow's package layout (`hypr/`, `bin/`, ...), but the
 included Python linker does not require Stow to be installed. The `omarchy/`
 package contains private screensaver assets and its replacement animation program.
 The `systemd/` package contains the session-scoped hot-corner service.
@@ -199,6 +199,17 @@ which is nearly invisible on dark themes. Lower the opacity for stronger dimming
 settings override the theme; nothing else in that file changes. Ghostty has no
 inline comments, so that line is untagged. Apply edits with
 `omarchy restart terminal`; check with `ghostty +validate-config`.
+
+## Pi agent skill
+
+`pi/.pi/agent/skills/dotfiles/SKILL.md` is linked to
+`~/.pi/agent/skills/dotfiles/`, so every new pi session knows this layer exists.
+Pi lists only the skill's name and description up front and reads the full
+instructions when a task involves the desktop or these dotfiles. To force it,
+use `/skill:dotfiles <request>`. The skill covers where changes go, how to
+apply and validate them, the commit-and-push workflow, and lessons learned. It
+points back to this README for details, so update both when behavior changes.
+Run `/reload` in an open session after editing it.
 
 ## Quiet screensaver
 
