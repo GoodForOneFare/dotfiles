@@ -122,7 +122,9 @@ using a personal plugin that inherits Omarchy 4.5's theme-aware menu surface.
   while the open modal handles both.
 
 No typing, arrows, or Enter are needed. Windows across workspaces are listed in
-recent-use order, with the previous window highlighted first. Super+1..9 still
+recent-use order, with the previous window highlighted first. Windows behind a
+fullscreen app remain listed, even when Hyprland temporarily marks them as
+unable to receive input. Super+1..9 still
 selects workspaces; Super+Ctrl+Tab returns to the former workspace.
 
 
@@ -136,7 +138,10 @@ selection until the window snapshot is ready. The small `window-picker` Python
 helper validates, focuses, and raises the chosen address. Tiled windows always
 render below floating ones, so a tiled selection (for example, a window opened
 before the float-all rule applied) is first floated in place, keeping its
-current position and size. No extra package or
+current position and size. Returning to a fullscreen window lowers unpinned
+floating overlays on that workspace before focusing it, so previously selected
+apps cannot obscure it. Its fullscreen state is preserved; pinned windows and
+other workspaces are left alone. No extra package or
 daemon is required, and no packaged UI source is modified.
 
 ### Floating workspace layout

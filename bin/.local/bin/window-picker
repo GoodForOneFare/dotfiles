@@ -16,6 +16,20 @@ def focus(address):
         return  # The selected window closed while the switcher was open.
     target = json.dumps("address:" + address)
     expressions = []
+    if window.get("fullscreen"):
+        # Focus/raise alone leaves previously selected floating windows in
+        # Hyprland's above-fullscreen layer. Lower those peers first; this
+        # clears allowedOverFullscreen and its input/opacity state. Do not
+        # touch pinned windows or windows on other workspaces. Reverse the
+        # bottom-to-top client list to preserve the peers' stacking order.
+        workspace_id = window.get("workspace", {}).get("id")
+        for peer in reversed(clients):
+            if (workspace_id is not None and peer.get("workspace", {}).get("id") == workspace_id
+                    and peer["address"] != address and peer.get("mapped")
+                    and peer.get("floating") and not peer.get("pinned")
+                    and not peer.get("fullscreen") and peer.get("allowedOverFullscreen", True)):
+                peer_target = json.dumps("address:" + peer["address"])
+                expressions.append(f'hl.dsp.window.alter_zorder({{window={peer_target}, mode="bottom"}})')
     if not window.get("floating") and not window.get("fullscreen"):
         # Tiled windows always render below floating ones, so raising alone
         # cannot foreground them. Float in place, keeping current geometry.

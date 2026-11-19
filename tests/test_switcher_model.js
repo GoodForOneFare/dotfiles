@@ -14,6 +14,15 @@ assert.equal(model.next(items, 1, 1, true), 3); // highlighted Ghostty, not init
 assert.equal(model.next(items, 3, 1, true), 1);
 assert.equal(model.next([items[0]], 0, 1, true), 0);
 assert.equal(model.windows([...items, {mapped:true,address:"bad; command"}]).length, 4);
+// Fullscreen can make other mapped windows temporarily reject input.
+const fullscreenItems = items.map((w, i) => ({...w, fullscreen: i === 0 ? 2 : 0, acceptsInput: i === 0}));
+const fullscreenWindows = model.windows([
+    ...fullscreenItems,
+    {address:"0x5", mapped:false, class:"Closed", acceptsInput:false},
+    {address:"0x6", mapped:true, class:"org.omarchy.screensaver", acceptsInput:true},
+]);
+assert.deepEqual(Array.from(fullscreenWindows, w => w.address), items.map(w => w.address));
+assert.equal(fullscreenWindows[model.next(fullscreenWindows, 0, 1, false)].address, "0x2");
 assert(!model.options(items)[0].includes("<"));
 assert(!model.options(items)[0].includes(">"));
 assert.notEqual(model.options(items)[1], model.options(items)[3]);

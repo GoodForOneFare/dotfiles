@@ -5,7 +5,9 @@ function plain(value) {
 }
 function windows(clients) {
     return clients.filter(function(w) {
-        return w.mapped && w.acceptsInput !== false && w.class !== "org.omarchy.screensaver"
+        // acceptsInput is transient: fullscreen can block other mapped windows.
+        // They must remain selectable so the user can switch away.
+        return w.mapped && w.class !== "org.omarchy.screensaver"
             && /^0x[0-9a-f]+$/i.test(w.address || "");
     }).slice(0, 500).sort(function(a, b) {
         return (a.focusHistoryID >= 0 ? a.focusHistoryID : 9999)
