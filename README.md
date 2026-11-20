@@ -152,8 +152,12 @@ floating overlays on that workspace before focusing it, so previously selected
 apps cannot obscure it. Its fullscreen state is preserved; pinned windows and
 other workspaces are left alone. `personal/foreground.lua` also applies this
 cleanup when a fullscreen app gains focus outside the switcher (for example,
-clicking a Slack notification), so old floating overlays cannot hide it. This
-runs after focus settles and does nothing if focus has already moved elsewhere.
+clicking a Slack notification), so old floating overlays cannot hide it. It also
+raises ordinary floating windows when they gain focus: opening a Chrome tab
+from a Slack link must not leave the focused browser hidden behind Slack,
+whether or not Slack is fullscreen. It does not force focus when an app never
+requests activation, change fullscreen state, or move/resize windows. This runs
+after focus settles and does nothing if focus has already moved elsewhere.
 Run `lua tests/test_foreground.lua` for the mocked focus/stacking regression test.
 No extra package or daemon is required, and no packaged UI source is modified.
 

@@ -50,11 +50,24 @@ end
 no_change(active, win("0xb", {fullscreen = 2})) -- focus moved before timer
 active = win("0x1", {fullscreen = 2})
 no_change(active, nil) -- closed before timer
-active = win("0x1")
-no_change(active, active) -- ordinary app: no overlay cleanup
+-- A browser activated by a Slack link must rise, even without fullscreen.
+dispatched = {}
+active = win("0xc")
+peers = {win("0xd", {fullscreen = 2}), active}
+handler(active)
+assert(#dispatched == 0)
+pending()
+assert(#dispatched == 1)
+assert(dispatched[1].window == "address:0xc" and dispatched[1].mode == "top")
+assert(peers[1].fullscreen == 2) -- leave the other app fullscreen
+assert(active.floating and active.workspace.id == 1)
+
+-- An ordinary tiled window should not have its layout/stacking changed.
+active = win("0x1", {floating = false})
+no_change(active, active)
 active = win("0x1", {fullscreen = 2, mapped = false})
 no_change(active, active)
 active = win("0x1", {fullscreen = 2, workspace = false})
 no_change(active, active)
 no_change(nil, nil)
-print("Fullscreen foreground cleanup checks passed.")
+print("Floating activation, fullscreen cleanup and stale-focus guard checks passed.")
