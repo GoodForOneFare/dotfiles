@@ -27,3 +27,5 @@ o.rebind("MOD3 + SPACE", "Fill screen without fullscreen", snap_window("maximize
 -- The dock is disabled (setup.sh), and Super+M minimizes *to the dock*: a
 -- window minimized with no dock has no way back. Drop the binding.
 hl.unbind("SUPER + M")
+
+require("hypr.personal.foreground")

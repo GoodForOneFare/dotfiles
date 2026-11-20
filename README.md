@@ -150,8 +150,12 @@ before the float-all rule applied) is first floated in place, keeping its
 current position and size. Returning to a fullscreen window lowers unpinned
 floating overlays on that workspace before focusing it, so previously selected
 apps cannot obscure it. Its fullscreen state is preserved; pinned windows and
-other workspaces are left alone. No extra package or
-daemon is required, and no packaged UI source is modified.
+other workspaces are left alone. `personal/foreground.lua` also applies this
+cleanup when a fullscreen app gains focus outside the switcher (for example,
+clicking a Slack notification), so old floating overlays cannot hide it. This
+runs after focus settles and does nothing if focus has already moved elsewhere.
+Run `lua tests/test_foreground.lua` for the mocked focus/stacking regression test.
+No extra package or daemon is required, and no packaged UI source is modified.
 
 ### Floating workspace layout
 
