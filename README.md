@@ -128,9 +128,11 @@ The personal input config disables Hyprland's automatic pointer warping, so
 switching windows leaves the pointer where you put it (also for other
 keyboard-driven focus changes).
 
-No typing, arrows, or Enter are needed. Windows across workspaces are listed in
-recent-use order, with the previous window highlighted first. Windows behind a
-fullscreen app remain listed, even when Hyprland temporarily marks them as
+No typing, arrows, or Enter are needed. Only windows on the workspace where the
+switcher opens are listed, in recent-use order, with the previous window on that
+workspace highlighted first. Same-app cycling stays within that workspace too;
+restoring the full list never brings in windows from other workspaces. Windows
+behind a fullscreen app remain listed, even when Hyprland temporarily marks them as
 unable to receive input. Super+1..9 still
 selects workspaces; Super+Ctrl+Tab returns to the former workspace.
 

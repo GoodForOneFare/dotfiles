@@ -67,6 +67,7 @@ Stock.Menu {
     property var clients: []
     property var allClients: []
     property var filterApp: null
+    property var workspaceId: null
     property bool loading: false
     property bool releasePending: false
     property var queuedSteps: []
@@ -103,6 +104,7 @@ Stock.Menu {
                                selected: clients.length ? clients[selectedIndex].address : "",
                                app: clients.length ? clients[selectedIndex].class : "",
                                count: clients.length, allCount: allClients.length, filterApp: filterApp,
+                               workspaceId: workspaceId,
                                releaseHandlerInstalled: releaseHandlerInstalled,
                                pointerShieldInstalled: pointerShield !== null})
     }
@@ -160,6 +162,9 @@ Stock.Menu {
         } else if (loading) {
             queuedSteps = queuedSteps.concat([{step: step, sameApp: sameApp}])
         } else {
+            // Freeze the invoking workspace before the menu takes keyboard focus.
+            var workspace = Hyprland.focusedWorkspace
+            workspaceId = workspace ? workspace.id : null
             loading = true
             releasePending = false
             queuedSteps = [{step: step, sameApp: sameApp}]
@@ -175,7 +180,7 @@ Stock.Menu {
                 if (!picker.loading) return
                 var data
                 try { data = JSON.parse(text) } catch (e) { data = [] }
-                picker.allClients = Model.windows(Array.isArray(data) ? data : [])
+                picker.allClients = Model.windows(Array.isArray(data) ? data : [], picker.workspaceId)
                 picker.clients = picker.allClients
                 picker.filterApp = null
                 picker.loading = false

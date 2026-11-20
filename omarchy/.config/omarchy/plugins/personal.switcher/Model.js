@@ -3,11 +3,12 @@ function plain(value) {
     return String(value || "").replace(/[<>]/g, function(c) { return c === "<" ? "＜" : "＞"; })
         .replace(/\s+/g, " ").slice(0, 512);
 }
-function windows(clients) {
+function windows(clients, workspaceId) {
     return clients.filter(function(w) {
         // acceptsInput is transient: fullscreen can block other mapped windows.
         // They must remain selectable so the user can switch away.
-        return w.mapped && w.class !== "org.omarchy.screensaver"
+        return w.mapped && w.workspace && w.workspace.id === workspaceId
+            && w.class !== "org.omarchy.screensaver"
             && /^0x[0-9a-f]+$/i.test(w.address || "");
     }).slice(0, 500).sort(function(a, b) {
         return (a.focusHistoryID >= 0 ? a.focusHistoryID : 9999)
