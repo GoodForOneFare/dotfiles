@@ -118,7 +118,7 @@ using a personal plugin that inherits Omarchy 4.5's theme-aware menu surface.
 - Escape cancels without changing focus.
 - **Alt+Tab**, **Alt+Shift+Tab** and **Alt+`** do the same, released with
   either Alt (replaces Omarchy's Alt+Tab focus-next/raise). Right Alt alone
-  stays push-to-talk dictation: only left Alt has a compositor release bind,
+  stays push-to-talk dictation: only left Alt has a compositor release listener,
   while the open modal handles both.
 
 The switcher is keyboard-only: pointer movement, clicks (including outside the
@@ -139,11 +139,14 @@ selects workspaces; Super+Ctrl+Tab returns to the former workspace.
 
 The plugin lives in `omarchy/.config/omarchy/plugins/personal.switcher/` and is
 enabled by setup. Native Hyprland global shortcuts preserve press/release
-ordering without spawning processes for each keypress. Once the modal owns
-keyboard focus, its focused input forwards actual Super release events to the
-plugin's selection handler; compositor release shortcuts alone are insufficient.
-Fast Super taps queue
-selection until the window snapshot is ready. The small `window-picker` Python
+ordering without spawning processes for each keypress. A raw Hyprland
+`input.keyboard.key` listener detects either Super key (and left Alt) releasing
+before keybind matching or Wayland focus routing. This avoids missed releases
+when rapidly switching, regardless of Shift/Ctrl state or whether the modal
+has taken keyboard focus yet. The modal's focused input also forwards release
+events as a fallback, including right Alt. Fast Super taps queue selection
+until the window snapshot is ready. Run `lua tests/test_switcher_bindings.lua`
+for passive release-order and rapid-chord regression checks. The small `window-picker` Python
 helper validates, focuses, and raises the chosen address. Tiled windows always
 render below floating ones, so a tiled selection (for example, a window opened
 before the float-all rule applied) is first floated in place, keeping its
