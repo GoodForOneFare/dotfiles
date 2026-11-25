@@ -33,10 +33,10 @@ local function foreground(window, opened)
         local target = "address:" .. address
         hl.dispatch(hl.dsp.window.float({ window = target, action = "on" }))
         hl.dispatch(hl.dsp.window.resize({
-          window = target, x = size[1], y = size[2], relative = false,
+          window = target, x = size.x, y = size.y, relative = false,
         }))
         hl.dispatch(hl.dsp.window.move({
-          window = target, x = at[1], y = at[2], relative = false,
+          window = target, x = at.x, y = at.y, relative = false,
         }))
       end
       -- Raising also lets a focused float appear over a fullscreen app. Do not

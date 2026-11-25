@@ -16,8 +16,14 @@ hl = {
   dsp = { window = {
     alter_zorder = function(value) value.op = "zorder"; return value end,
     float = function(value) value.op = "float"; return value end,
-    resize = function(value) value.op = "resize"; return value end,
-    move = function(value) value.op = "move"; return value end,
+    resize = function(value)
+      assert(type(value.x) == "number" and type(value.y) == "number")
+      value.op = "resize"; return value
+    end,
+    move = function(value)
+      assert(type(value.x) == "number" and type(value.y) == "number")
+      value.op = "move"; return value
+    end,
   } },
 }
 dofile("hypr/.config/hypr/personal/foreground.lua")
@@ -79,7 +85,9 @@ no_change(nil, nil)
 -- New Chrome windows can be focused but tiled below the existing floats.
 -- Opening must float in place, then raise; never explicitly dispatch focus.
 dispatched = {}
-active = win("0xe", {floating = false, at = {24, 48}, size = {1280, 900}})
+-- Lua geometry uses named x/y fields, unlike hyprctl's JSON arrays.
+active = win("0xe", {floating = false, at = {x = 24, y = 48},
+  size = {x = 1280, y = 900}})
 opened_handler(active)
 assert(#dispatched == 0)
 pending()
