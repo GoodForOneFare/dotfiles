@@ -158,8 +158,13 @@ cleanup when a fullscreen app gains focus outside the switcher (for example,
 clicking a Slack notification), so old floating overlays cannot hide it. It also
 raises ordinary floating windows when they gain focus: opening a Chrome tab
 from a Slack link must not leave the focused browser hidden behind Slack,
-whether or not Slack is fullscreen. It does not force focus when an app never
-requests activation, change fullscreen state, or move/resize windows. This runs
+whether or not Slack is fullscreen. On `window.open`, a focused new tiled
+window is floated in place and raised after layout initialization. This handles
+Chrome Ctrl+N on a saved scrolling workspace, where the static float rule can
+still leave the newcomer tiled below existing floats. Its position and size are
+restored after floating. Existing tiled windows are left alone on ordinary focus
+changes. It does not force focus when an app never requests activation or change
+fullscreen state. This runs
 after focus settles and does nothing if focus has already moved elsewhere.
 Run `lua tests/test_foreground.lua` for the mocked focus/stacking regression test.
 No extra package or daemon is required, and no packaged UI source is modified.
