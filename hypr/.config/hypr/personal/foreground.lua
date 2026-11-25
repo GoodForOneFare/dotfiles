@@ -1,7 +1,7 @@
 -- App activation can change keyboard focus without raising a floating window.
 -- Keep stacking in sync with focus, including notifications and browser links.
 -- Fullscreen targets also need their old above-fullscreen overlays cleared.
-hl.on("window.active", function(window)
+local function foreground(window, opened)
   if not window then return end
   local address = window.address
   -- Focus is still being committed inside the event. Re-resolve on the next
@@ -24,7 +24,21 @@ hl.on("window.active", function(window)
           }))
         end
       end
-    elseif active.floating then
+    elseif active.floating or opened then
+      if not active.floating then
+        -- Scrolling can tile a new window despite the personal float rule.
+        -- Tiled windows cannot rise above floats: float the focused newcomer
+        -- in place after opening has settled, without redirecting focus.
+        local at, size = active.at, active.size
+        local target = "address:" .. address
+        hl.dispatch(hl.dsp.window.float({ window = target, action = "on" }))
+        hl.dispatch(hl.dsp.window.resize({
+          window = target, x = size[1], y = size[2], relative = false,
+        }))
+        hl.dispatch(hl.dsp.window.move({
+          window = target, x = at[1], y = at[2], relative = false,
+        }))
+      end
       -- Raising also lets a focused float appear over a fullscreen app. Do not
       -- unfullscreen that app or change the target's geometry/workspace.
       hl.dispatch(hl.dsp.window.alter_zorder({
@@ -32,4 +46,8 @@ hl.on("window.active", function(window)
       }))
     end
   end, { type = "oneshot", timeout = 1 })
-end)
+end
+
+hl.on("window.active", function(window) foreground(window, false) end)
+-- Lua's window.open runs after layout/focus initialization (openLate).
+hl.on("window.open", function(window) foreground(window, true) end)

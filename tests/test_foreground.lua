@@ -1,9 +1,10 @@
-local handler, pending, active, peers
+local handler, opened_handler, pending, active, peers
 local dispatched = {}
 hl = {
   on = function(event, callback)
-    assert(event == "window.active")
-    handler = callback
+    if event == "window.active" then handler = callback
+    elseif event == "window.open" then opened_handler = callback
+    else error("Unexpected event: " .. event) end
   end,
   timer = function(callback, opts)
     assert(opts.type == "oneshot" and opts.timeout == 1)
@@ -12,7 +13,12 @@ hl = {
   get_active_window = function() return active end,
   get_windows = function() return peers end,
   dispatch = function(value) table.insert(dispatched, value) end,
-  dsp = { window = { alter_zorder = function(value) return value end } },
+  dsp = { window = {
+    alter_zorder = function(value) value.op = "zorder"; return value end,
+    float = function(value) value.op = "float"; return value end,
+    resize = function(value) value.op = "resize"; return value end,
+    move = function(value) value.op = "move"; return value end,
+  } },
 }
 dofile("hypr/.config/hypr/personal/foreground.lua")
 local function win(address, overrides)
@@ -70,4 +76,35 @@ no_change(active, active)
 active = win("0x1", {fullscreen = 2, workspace = false})
 no_change(active, active)
 no_change(nil, nil)
-print("Floating activation, fullscreen cleanup and stale-focus guard checks passed.")
+-- New Chrome windows can be focused but tiled below the existing floats.
+-- Opening must float in place, then raise; never explicitly dispatch focus.
+dispatched = {}
+active = win("0xe", {floating = false, at = {24, 48}, size = {1280, 900}})
+opened_handler(active)
+assert(#dispatched == 0)
+pending()
+assert(#dispatched == 4)
+assert(dispatched[1].op == "float" and dispatched[1].action == "on")
+assert(dispatched[2].op == "resize" and dispatched[2].x == 1280
+  and dispatched[2].y == 900 and dispatched[2].relative == false)
+assert(dispatched[3].op == "move" and dispatched[3].x == 24
+  and dispatched[3].y == 48 and dispatched[3].relative == false)
+assert(dispatched[4].op == "zorder" and dispatched[4].mode == "top")
+for _, d in ipairs(dispatched) do assert(d.window == "address:0xe") end
+
+-- No floating/raising a background, closed, or fullscreen newcomer.
+dispatched = {}
+opened_handler(active)
+active = win("0xf")
+pending()
+assert(#dispatched == 0)
+opened_handler(active)
+active = nil
+pending()
+assert(#dispatched == 0)
+active = win("0xe", {floating = false, fullscreen = 2})
+peers = {active}
+opened_handler(active)
+pending()
+assert(#dispatched == 0 and active.fullscreen == 2)
+print("Opening, floating activation, fullscreen cleanup and stale-focus checks passed.")
