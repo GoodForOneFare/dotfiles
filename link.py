@@ -23,7 +23,10 @@ DISPLAY = ('hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto"
 GHOSTTY = GHOSTTY_TAG = 'config-file = ?"~/.config/ghostty/personal.conf"'
 # (file relative to HOME, tag, line): one tagged line kept at the end of a
 # user-owned file. Nothing else in those files is touched.
+BASH_TAG = "# dotfiles: personal Bash aliases"
+BASH = '[[ -r "$HOME/.config/bash/personal.sh" ]] && source "$HOME/.config/bash/personal.sh" ' + BASH_TAG
 TAILS = [
+    (".bashrc", BASH_TAG, BASH),
     (".config/hypr/monitors.lua", DISPLAY_TAG, DISPLAY),
     (".config/ghostty/config", GHOSTTY_TAG, GHOSTTY),
 ]
@@ -47,7 +50,7 @@ def main():
     if not config.is_file():
         raise SystemExit("Install/configure Lua-based Omarchy first; hyprland.lua is missing.")
     pairs = []
-    for package in ("hypr", "bin", "omarchy", "systemd", "ghostty", "pi"):
+    for package in ("hypr", "bin", "omarchy", "systemd", "ghostty", "pi", "bash"):
         package_root = ROOT / package
         for source in package_root.rglob("*"):
             if (source.is_file() and "__pycache__" not in source.parts

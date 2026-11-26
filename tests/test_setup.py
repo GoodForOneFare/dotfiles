@@ -26,6 +26,9 @@ class LinkTests(unittest.TestCase):
             ghostty.parent.mkdir(parents=True)
             ghostty_original = 'font-size = 9\nconfig-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"\n'
             ghostty.write_text(ghostty_original)
+            bashrc = home / '.bashrc'
+            bashrc_original = '# Existing shell settings\nalias mine=true\n'
+            bashrc.write_text(bashrc_original)
             helper = home / '.local/bin/window-snap'
             helper.parent.mkdir(parents=True)
             helper.write_text('old helper')
@@ -49,8 +52,13 @@ class LinkTests(unittest.TestCase):
             self.assertTrue(term.startswith(ghostty_original))
             self.assertIn('personal.conf', term.splitlines()[-1])  # last, so it wins over the theme
             self.assertTrue((home / '.config/ghostty/personal.conf').is_symlink())
+            shell = bashrc.read_text()
+            self.assertTrue(shell.startswith(bashrc_original))
+            self.assertIn('personal.sh', shell.splitlines()[-1])
+            self.assertTrue((home / '.config/bash/personal.sh').is_symlink())
             run('--check')
             run()
+            self.assertEqual(bashrc.read_text(), shell)
             self.assertEqual(config.read_text(), body)
             self.assertEqual(monitors.read_text(), screens)
             monitors.write_text(monitors_original)
@@ -64,6 +72,8 @@ class LinkTests(unittest.TestCase):
             self.assertEqual(config.read_text(), original)
             self.assertEqual(monitors.read_text(), monitors_original)
             self.assertEqual(ghostty.read_text(), ghostty_original)
+            self.assertEqual(bashrc.read_text(), bashrc_original)
+            self.assertFalse((home / '.config/bash/personal.sh').exists())
             self.assertFalse(helper.exists())
 
 

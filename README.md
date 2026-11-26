@@ -39,6 +39,22 @@ included Python linker does not require Stow to be installed. The `omarchy/`
 package contains private screensaver assets and its replacement animation program.
 The `systemd/` package contains the session-scoped hot-corner service.
 
+## Bash clipboard aliases
+
+`bash/.config/bash/personal.sh`, linked to `~/.config/bash/personal.sh`, defines
+`pbcopy` as `wl-copy` and `pbpaste` as `wl-paste --no-newline`. These use the
+Wayland clipboard; `wl-clipboard` must be installed (it ships on this box).
+
+`link.py` adds one guarded source line at the end of `~/.bashrc`, preserving
+all existing shell configuration. New interactive Bash shells load the aliases;
+for an already-open shell, run `source ~/.config/bash/personal.sh`.
+Removing the layer removes only its source line and linked file.
+
+```bash
+printf 'hello' | pbcopy
+pbpaste > file.txt
+```
+
 ## Layer order
 
 ```text
