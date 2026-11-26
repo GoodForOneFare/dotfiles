@@ -18,7 +18,7 @@ hl = {
 dofile("hypr/.config/hypr/personal/navigation.lua")
 local count = 0
 for _ in pairs(bindings) do count = count + 1 end
-assert(count == 10) -- four arrows, four selections, two history shortcuts
+assert(count == 11) -- arrows/selections, two history shortcuts, Ctrl+L
 local expected = {
   {"SUPER + LEFT", "", "Home", "Line start"},
   {"SUPER + RIGHT", "", "End", "Line end"},
@@ -30,6 +30,7 @@ local expected = {
   {"SUPER + SHIFT + DOWN", "CTRL SHIFT", "End", "Select to document end"},
   {"SUPER + BRACKETLEFT", "ALT", "LEFT", "Back"},
   {"SUPER + BRACKETRIGHT", "ALT", "RIGHT", "Forward"},
+  {"SUPER + L", "CTRL", "L", "Address bar / Ctrl+L"},
 }
 local function check_binding(item)
   sent, timers = {}, {}
@@ -47,7 +48,7 @@ for _, class in ipairs({"google-chrome", "slack", "com.microsoft.VSCode"}) do
   active = {class = class, tags = {}}
   for _, item in ipairs(expected) do check_binding(item) end
 end
--- Match omac: only plain line-start/end moves are sent in terminals.
+-- Terminals receive line-start/end and Ctrl+L, not document/history keys.
 for _, terminal in ipairs({
   {class = "com.mitchellh.ghostty", tags = {}},
   {class = "herdr-app", tags = {}},
@@ -57,7 +58,8 @@ for _, terminal in ipairs({
   active = terminal
   check_binding(expected[1])
   check_binding(expected[2])
-  for i = 3, #expected do
+  check_binding(expected[11])
+  for i = 3, 10 do
     sent, timers = {}, {}
     bindings[expected[i][1]].callback()
     assert(#sent == 0 and #timers == 0)

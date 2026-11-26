@@ -70,6 +70,10 @@ shortcuts do nothing, matching omac's terminal safety behavior. Without a text
 field focused, GUI apps interpret Home/End themselves (often page scrolling).
 On the built-in keyboard, the physical left Alt key acts as Super.
 
+**Super+L** sends **Ctrl+L**, selecting the address bar in Chrome and clearing
+the display in shells. It replaces the forward workspace-layout cycle;
+**Super+Alt+L** still cycles layouts backward and **Super+Ctrl+L** still locks.
+
 Implementation: `hypr/.config/hypr/personal/navigation.lua`, required by
 `personal/windows.lua` after upstream configuration. Run
 `lua tests/test_navigation_bindings.lua` for the passive regression test.
@@ -212,7 +216,8 @@ window, which the float-all window rule alone does not prevent. `setup.sh`
 therefore sets the default layout to floating with
 `omarchy hyprland workspace layout default floating`, and `--check` verifies it.
 A workspace that already has windows keeps its own saved layout: switch it with
-**Super+L** (or `omarchy hyprland workspace layout toggle`) until it reports
+**Super+Alt+L** (cycle backward, or `omarchy hyprland workspace layout toggle`)
+until it reports
 floating. Saved layouts live in `~/.local/state/omarchy/workspace-layouts/`.
 
 Omarchy's **dock** (the launcher bar at the bottom middle) appears only on

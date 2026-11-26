@@ -37,3 +37,6 @@ end
 
 o.rebind("SUPER + BRACKETLEFT", "Back", send("ALT", "LEFT", false))
 o.rebind("SUPER + BRACKETRIGHT", "Forward", send("ALT", "RIGHT", false))
+
+-- Ctrl+L selects the browser address bar; in shells it clears the display.
+o.rebind("SUPER + L", "Address bar / Ctrl+L", send("CTRL", "L", true))
