@@ -55,13 +55,19 @@ printf 'hello' | pbcopy
 pbpaste > file.txt
 ```
 
-## App Back / Forward
+## Mac-style arrows and Back / Forward
 
-**Super+Left/Right** sends **Alt+Left/Right** to the focused app for navigation
-history in Chrome, Slack and other apps supporting those shortcuts. This
-replaces Omarchy's left/right window focus and, if omac is enabled, its
-line-start/end mappings. Other arrow chords and omac's bracket shortcuts are
-unchanged. Apps without history navigation interpret Alt+arrow themselves.
+**Super+Left/Right** goes to line start/end (Home/End), and **Super+Up/Down**
+goes to document start/end (Ctrl+Home/End). Add **Shift** to select to the same
+boundary. **Super+[ / Super+]** sends **Alt+Left/Right** for Back/Forward in
+Chrome, Slack and other apps supporting history navigation.
+
+These replace Omarchy's Super+arrow window focus and Super+Shift+arrow window
+swapping, and match omac's navigation conventions even when omac is disabled.
+Ctrl/Alt arrow chords and shifted bracket shortcuts are unchanged. In terminals,
+only plain Super+Left/Right sends Home/End; document, selection and history
+shortcuts do nothing, matching omac's terminal safety behavior. Without a text
+field focused, GUI apps interpret Home/End themselves (often page scrolling).
 On the built-in keyboard, the physical left Alt key acts as Super.
 
 Implementation: `hypr/.config/hypr/personal/navigation.lua`, required by
