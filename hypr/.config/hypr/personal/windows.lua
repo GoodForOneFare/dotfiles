@@ -29,3 +29,4 @@ o.rebind("MOD3 + SPACE", "Fill screen without fullscreen", snap_window("maximize
 hl.unbind("SUPER + M")
 
 require("hypr.personal.foreground")
+require("hypr.personal.navigation")

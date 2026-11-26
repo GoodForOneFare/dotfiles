@@ -55,6 +55,19 @@ printf 'hello' | pbcopy
 pbpaste > file.txt
 ```
 
+## App Back / Forward
+
+**Super+Left/Right** sends **Alt+Left/Right** to the focused app for navigation
+history in Chrome, Slack and other apps supporting those shortcuts. This
+replaces Omarchy's left/right window focus and, if omac is enabled, its
+line-start/end mappings. Other arrow chords and omac's bracket shortcuts are
+unchanged. Apps without history navigation interpret Alt+arrow themselves.
+On the built-in keyboard, the physical left Alt key acts as Super.
+
+Implementation: `hypr/.config/hypr/personal/navigation.lua`, required by
+`personal/windows.lua` after upstream configuration. Run
+`lua tests/test_navigation_bindings.lua` for the passive regression test.
+
 ## Layer order
 
 ```text
