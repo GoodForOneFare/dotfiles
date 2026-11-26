@@ -39,7 +39,7 @@ included Python linker does not require Stow to be installed. The `omarchy/`
 package contains private screensaver assets and its replacement animation program.
 The `systemd/` package contains the session-scoped hot-corner service.
 
-## Bash clipboard aliases
+## Bash clipboard aliases and shared history
 
 `bash/.config/bash/personal.sh`, linked to `~/.config/bash/personal.sh`, defines
 `pbcopy` as `wl-copy` and `pbpaste` as `wl-paste --no-newline`. These use the
@@ -54,6 +54,17 @@ Removing the layer removes only its source line and linked file.
 printf 'hello' | pbcopy
 pbpaste > file.txt
 ```
+
+The same file sets `HISTSIZE` and `HISTFILESIZE` to **10,000** and enables
+`histappend`. Before each prompt it appends new commands with `history -a`, then
+reloads the shared file with `history -c; history -r` to avoid stale incremental
+read offsets when terminals interleave commands. History is only cleared after
+a successful append to a readable history file. Existing scalar/array
+`PROMPT_COMMAND` hooks and the preceding command's
+exit status are preserved; re-sourcing does not duplicate the history hook.
+Existing shells must source this file too; history refreshes at the next prompt,
+not while sitting idle. Omarchy's default was 32,768; this explicitly sets the
+requested 10,000 limit. Tests use temporary history files, never your history.
 
 ## Mac-style arrows and Back / Forward
 
@@ -73,6 +84,10 @@ On the built-in keyboard, the physical left Alt key acts as Super.
 **Super+L** sends **Ctrl+L**, selecting the address bar in Chrome and clearing
 the display in shells. It replaces the forward workspace-layout cycle;
 **Super+Alt+L** still cycles layouts backward and **Super+Ctrl+L** still locks.
+
+**Super+T** sends **Ctrl+T** for New Tab in GUI apps, replacing the focused
+window's floating/tiling toggle. It is suppressed in terminals, where Ctrl+T
+transposes characters rather than opening a tab. Other T chords are unchanged.
 
 Implementation: `hypr/.config/hypr/personal/navigation.lua`, required by
 `personal/windows.lua` after upstream configuration. Run

@@ -18,7 +18,7 @@ hl = {
 dofile("hypr/.config/hypr/personal/navigation.lua")
 local count = 0
 for _ in pairs(bindings) do count = count + 1 end
-assert(count == 11) -- arrows/selections, two history shortcuts, Ctrl+L
+assert(count == 12) -- arrows/selections, history shortcuts, Ctrl+L and Ctrl+T
 local expected = {
   {"SUPER + LEFT", "", "Home", "Line start"},
   {"SUPER + RIGHT", "", "End", "Line end"},
@@ -31,6 +31,7 @@ local expected = {
   {"SUPER + BRACKETLEFT", "ALT", "LEFT", "Back"},
   {"SUPER + BRACKETRIGHT", "ALT", "RIGHT", "Forward"},
   {"SUPER + L", "CTRL", "L", "Address bar / Ctrl+L"},
+  {"SUPER + T", "CTRL", "T", "New tab"},
 }
 local function check_binding(item)
   sent, timers = {}, {}
@@ -59,10 +60,12 @@ for _, terminal in ipairs({
   check_binding(expected[1])
   check_binding(expected[2])
   check_binding(expected[11])
-  for i = 3, 10 do
-    sent, timers = {}, {}
-    bindings[expected[i][1]].callback()
-    assert(#sent == 0 and #timers == 0)
+  for i = 3, #expected do
+    if i ~= 11 then
+      sent, timers = {}, {}
+      bindings[expected[i][1]].callback()
+      assert(#sent == 0 and #timers == 0)
+    end
   end
 end
 active = nil
