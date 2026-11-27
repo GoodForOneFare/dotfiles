@@ -11,39 +11,32 @@ spec.loader.exec_module(module)
 
 
 class LocalSearchTests(unittest.TestCase):
-    def settings(self, recursive, single='@as []'):
-        def read(*args):
-            if args[1] == 'list-schemas':
-                return module.SCHEMA
-            return recursive if args[-1] == 'index-recursive-directories' else single
-        return read
-
-    def test_apply_stops_then_sets_then_starts(self):
-        with patch.object(module, 'command', side_effect=self.settings("['$HOME']", "['/tmp']")), patch.object(module.subprocess, 'run') as run:
+    def test_apply_masks_and_kills_running_indexer(self):
+        def value(unit, name):
+            return '123' if unit == module.UNITS[0] else '0'
+        with patch.object(module, 'property_value', side_effect=value), patch.object(module.subprocess, 'run') as run:
             module.configure()
             calls = [call.args[0] for call in run.call_args_list]
-            self.assertEqual(calls[0], ['systemctl', '--user', 'stop', 'localsearch-3.service'])
-            self.assertEqual(calls[-1], ['systemctl', '--user', 'start', 'localsearch-3.service'])
-            self.assertEqual(len(calls), 4)
-            self.assertEqual(calls[2][-1], '[]')
-            self.assertNotIn('$HOME', calls[1][-1])
+            self.assertEqual(calls[0], ['systemctl', '--user', 'mask', '--now', '--no-block', *module.UNITS])
+            self.assertEqual(calls[1], ['systemctl', '--user', 'kill', '--kill-whom=all', '--signal=SIGKILL', module.UNITS[0]])
+            self.assertEqual(len(calls), 2)
 
-    def test_idempotent_and_check_read_only(self):
-        expected = repr([str(Path.home() / name) for name in module.FOLDERS])
-        with patch.object(module, 'command', side_effect=self.settings(expected)), patch.object(module.subprocess, 'run') as run:
+    def test_reapply_does_not_kill_stopped_services(self):
+        with patch.object(module, 'property_value', return_value='0'), patch.object(module.subprocess, 'run') as run:
             module.configure()
+            self.assertEqual(run.call_count, 1)
+
+    def test_check_read_only_and_detects_drift(self):
+        def value(unit, name):
+            return 'masked' if name == 'LoadState' else '0'
+        with patch.object(module, 'property_value', side_effect=value), patch.object(module.subprocess, 'run') as run:
             module.configure(check=True)
             run.assert_not_called()
-        with patch.object(module, 'command', side_effect=self.settings("['$HOME']")), patch.object(module.subprocess, 'run') as run:
-            with self.assertRaises(SystemExit):
-                module.configure(check=True)
-            run.assert_not_called()
-
-    def test_missing_schema_skipped(self):
-        with patch.object(module, 'command', return_value=''), patch.object(module.subprocess, 'run') as run:
-            module.configure()
-            module.configure(check=True)
-            run.assert_not_called()
+        for state, pid in [('loaded', '0'), ('masked', '123')]:
+            with patch.object(module, 'property_value', side_effect=lambda unit, name: state if name == 'LoadState' else pid), patch.object(module.subprocess, 'run') as run:
+                with self.assertRaises(SystemExit):
+                    module.configure(check=True)
+                run.assert_not_called()
 
     def test_setup_integration(self):
         setup = (ROOT / 'setup.sh').read_text()

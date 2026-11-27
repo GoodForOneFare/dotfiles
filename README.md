@@ -68,29 +68,29 @@ log out and back in after removal to clear the old session environment.
 
 ## File search indexing
 
-Setup limits GNOME LocalSearch (formerly Tracker, used by Nautilus/Files) to
-`~/Documents`, `~/Downloads`, `~/Music`, `~/Pictures`, and `~/Videos`, recursively.
-These explicit paths avoid XDG folders falling back to the entire home directory.
-World checkouts, Git object stores, development fixtures, and caches outside those
-folders are no longer in scope. The non-recursive indexing list is cleared too.
-Existing Git-repository exclusions are preserved. Keep development trees outside
-these five folders.
+Setup **disables GNOME LocalSearch background indexing** (formerly Tracker, used
+by Nautilus/Files). On this development machine a whole-home index reached four
+million files; narrowing its scope still left the old database consuming a CPU
+core and about 17 GB of RAM. No personal files or index databases are deleted.
 
-`localsearch.py` applies these persistent GSettings preferences and restarts the
-indexer only when the scope changes, stopping the old scan first.
-`./setup.sh --check` checks the scope without changing settings or starting the service.
-If the LocalSearch schema is absent, setup skips it. Reapplying does not erase or
-rebuild the index; pruning old entries may temporarily consume CPU. No personal
-files are deleted. Indexed/content search outside these folders is reduced.
+`localsearch.py` masks and stops the user services `localsearch-3.service`,
+`localsearch-control-3.service`, and `localsearch-writeback-3.service`. Masks
+prevent automatic/D-Bus activation, including when Files is opened. If an indexer
+is still running, setup kills it rather than waiting for its unresponsive
+90-second graceful stop. Ordinary file browsing still works; indexed/content
+search and metadata-dependent features in Files may be unavailable.
 
-Like the wallpaper/workspace preferences, this setting persists after `--remove`.
-To restore the upstream whole-home default deliberately:
+`./setup.sh --check` verifies the services are masked and have no main process,
+without changing anything. Reapplying is safe. Like other command-managed
+preferences, masks persist after `--remove`. To deliberately re-enable indexing:
 
 ```sh
-gsettings reset org.freedesktop.Tracker3.Miner.Files index-recursive-directories
-gsettings reset org.freedesktop.Tracker3.Miner.Files index-single-directories
-systemctl --user restart localsearch-3.service
+systemctl --user unmask localsearch-3.service localsearch-control-3.service localsearch-writeback-3.service
+systemctl --user start localsearch-3.service
 ```
+
+The previous limited-scope GSettings remain on this machine, so re-enabling
+does not restore whole-home indexing. Reapplying setup disables indexing again.
 
 ## Git editor
 

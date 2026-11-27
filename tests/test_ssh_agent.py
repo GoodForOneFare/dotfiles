@@ -35,10 +35,11 @@ class AgentSetupTests(unittest.TestCase):
             stub = '''#!/usr/bin/env bash
 set -eu
 case "${0##*/}" in
-gsettings) ;; # No LocalSearch schema in this isolated desktop test.
 systemctl)
   echo "$*" >> "$HOME/commands"
   case "$*" in
+    *'--property=LoadState --value') echo masked ;;
+    *'--property=MainPID --value') echo 0 ;;
     *'enable --now gcr-ssh-agent.socket') touch "$HOME/enabled" "$HOME/active" ;;
     *'disable --now gcr-ssh-agent.socket') rm -f "$HOME/enabled" "$HOME/active" ;;
     *'is-enabled gcr-ssh-agent.socket') test -f "$HOME/enabled" ;;
@@ -51,7 +52,7 @@ omarchy)
   esac ;;
 esac
 '''
-            for name in ('systemctl', 'omarchy', 'hyprctl', 'hyprsunset', 'omarchy-shell', 'gsettings'):
+            for name in ('systemctl', 'omarchy', 'hyprctl', 'hyprsunset', 'omarchy-shell'):
                 target = bindir / name
                 target.write_text(stub)
                 target.chmod(0o755)
