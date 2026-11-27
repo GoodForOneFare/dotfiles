@@ -3,6 +3,7 @@
 set -euo pipefail
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 plugin="$HOME/.config/omarchy/plugins/io.github.nchudleigh.omac"
+agent_env="$HOME/.config/environment.d/90-gcr-ssh-agent.conf"
 omac_commit=fe434579e7fa9dc0fa3d0f87905cf4fd057fd4f1
 mode=${1:-}
 case "$mode" in ""|--check|--remove) ;; *) echo "Usage: $0 [--check|--remove]" >&2; exit 2 ;; esac
@@ -14,6 +15,11 @@ done
   exit 1
 }
 if [[ "$mode" == --remove ]]; then
+  # Stop the agent only when removing our own environment configuration.
+  if [[ -L "$agent_env" && $(readlink -f -- "$agent_env") == "$repo/systemd/.config/environment.d/90-gcr-ssh-agent.conf" ]]; then
+    systemctl --user disable --now gcr-ssh-agent.socket
+    systemctl --user stop gcr-ssh-agent.service
+  fi
   # Clean up our idle request while its executable is still linked.
   systemctl --user stop dotfiles-hot-corner.service || true
   for id in personal.switcher personal.workspace-label; do
@@ -22,6 +28,12 @@ if [[ "$mode" == --remove ]]; then
   python3 "$repo/link.py" --remove
 elif [[ "$mode" == --check ]]; then
   python3 "$repo/link.py" --check
+  systemctl --user --quiet is-enabled gcr-ssh-agent.socket || {
+    echo "SSH agent socket is not enabled" >&2; exit 1;
+  }
+  systemctl --user --quiet is-active gcr-ssh-agent.socket || {
+    echo "SSH agent socket is not active" >&2; exit 1;
+  }
   [[ -f "$plugin/hypr/omac.lua" ]] || { echo "omac is missing" >&2; exit 1; }
   omarchy plugin list | grep -E '^io\.github\.nchudleigh\.omac[[:space:]]+enabled' >/dev/null || {
     echo "omac is not enabled" >&2; exit 1;
@@ -79,6 +91,13 @@ elif [[ "$mode" != --check ]]; then
   # Restart only the tint service so it rereads our linked all-day profile.
   systemctl --user restart hyprsunset.service
   systemctl --user daemon-reload
+  # Same agent/socket as `omarchy setup security ssh-agent`; its environment
+  # file is linked from this repo rather than generated outside the layer.
+  systemctl --user enable --now gcr-ssh-agent.socket
+  if [[ ${SSH_AUTH_SOCK:-} != "$XDG_RUNTIME_DIR/gcr/ssh" ]]; then
+    printf 'SSH agent enabled. Log out and back in to use it throughout the desktop.\n'
+    printf 'For this terminal now: export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/gcr/ssh"\n'
+  fi
   systemctl --user restart dotfiles-hot-corner.service
   # Solid black wallpaper, through Omarchy's supported background command.
   omarchy theme bg set "$HOME/.config/omarchy/personal/backgrounds/black.png"

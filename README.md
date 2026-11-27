@@ -29,6 +29,8 @@ The script:
 4. Reloads Hyprland and checks configuration errors, then restarts the stock
    user-session hyprsunset service to read the 3000 K profile. It never restarts
    your desktop session or reboots.
+5. Enables the desktop SSH agent socket, with its environment configuration
+   linked from this repo. Log out and back in to make it available everywhere.
 
 Existing replaced files are backed up under `~/.local/state/dotfiles/backups/`.
 On validation failure, inspect that backup and restore the previous configs;
@@ -38,6 +40,31 @@ The directories use GNU Stow's package layout (`hypr/`, `bin/`, ...), but the
 included Python linker does not require Stow to be installed. The `omarchy/`
 package contains private screensaver assets and its replacement animation program.
 The `systemd/` package contains the session-scoped hot-corner service.
+
+## SSH agent
+
+Setup enables and starts `gcr-ssh-agent.socket`, the same desktop agent used by
+`omarchy setup security ssh-agent`. The `systemd/` package links
+`~/.config/environment.d/90-gcr-ssh-agent.conf`, setting
+`SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/gcr/ssh`. Passphrase-protected keys can use a
+graphical prompt with optional keyring storage. No keys or passphrases belong
+in this repository; setup does not generate or load keys.
+
+**Log out and back in** after the first setup. To use the agent immediately in
+an existing terminal (after running setup):
+
+```sh
+export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/gcr/ssh"
+ssh-add ~/.ssh/git_signing  # Or your existing SSH key
+ssh-add -l
+```
+
+`./setup.sh --check` verifies the linked configuration and that the socket is
+both enabled and active; it does not require the current terminal to have the
+new environment or any keys loaded. Reapplying setup is safe. `--remove`
+disables/stops the socket and service only if the environment file is still our
+symlink, then removes that link. It does not delete keys or keyring entries;
+log out and back in after removal to clear the old session environment.
 
 ## Bash clipboard aliases and shared history
 
