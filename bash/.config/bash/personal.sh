@@ -1,3 +1,6 @@
+# Use vi for Git messages without changing other programs' editor.
+export GIT_EDITOR=vi
+
 # macOS-style names for the Wayland clipboard.
 alias pbcopy='wl-copy'
 alias pbpaste='wl-paste --no-newline'

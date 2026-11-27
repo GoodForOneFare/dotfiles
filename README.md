@@ -66,6 +66,18 @@ disables/stops the socket and service only if the environment file is still our
 symlink, then removes that link. It does not delete keys or keyring entries;
 log out and back in after removal to clear the old session environment.
 
+## Git editor
+
+The personal Bash config exports `GIT_EDITOR=vi`, so Git uses `vi` for commit
+messages and other editing without changing `EDITOR` or `VISUAL` for other
+programs. This takes precedence over Git's `core.editor`. New interactive Bash
+shells load it automatically through `~/.bashrc`; in an existing shell, run:
+
+```bash
+source ~/.config/bash/personal.sh
+git var GIT_EDITOR  # vi
+```
+
 ## Bash clipboard aliases and shared history
 
 `bash/.config/bash/personal.sh`, linked to `~/.config/bash/personal.sh`, defines
