@@ -66,6 +66,32 @@ disables/stops the socket and service only if the environment file is still our
 symlink, then removes that link. It does not delete keys or keyring entries;
 log out and back in after removal to clear the old session environment.
 
+## File search indexing
+
+Setup limits GNOME LocalSearch (formerly Tracker, used by Nautilus/Files) to
+`~/Documents`, `~/Downloads`, `~/Music`, `~/Pictures`, and `~/Videos`, recursively.
+These explicit paths avoid XDG folders falling back to the entire home directory.
+World checkouts, Git object stores, development fixtures, and caches outside those
+folders are no longer in scope. The non-recursive indexing list is cleared too.
+Existing Git-repository exclusions are preserved. Keep development trees outside
+these five folders.
+
+`localsearch.py` applies these persistent GSettings preferences and restarts the
+indexer only when the scope changes, stopping the old scan first.
+`./setup.sh --check` checks the scope without changing settings or starting the service.
+If the LocalSearch schema is absent, setup skips it. Reapplying does not erase or
+rebuild the index; pruning old entries may temporarily consume CPU. No personal
+files are deleted. Indexed/content search outside these folders is reduced.
+
+Like the wallpaper/workspace preferences, this setting persists after `--remove`.
+To restore the upstream whole-home default deliberately:
+
+```sh
+gsettings reset org.freedesktop.Tracker3.Miner.Files index-recursive-directories
+gsettings reset org.freedesktop.Tracker3.Miner.Files index-single-directories
+systemctl --user restart localsearch-3.service
+```
+
 ## Git editor
 
 The personal Bash config exports `GIT_EDITOR=vi`, so Git uses `vi` for commit

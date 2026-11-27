@@ -7,7 +7,7 @@ agent_env="$HOME/.config/environment.d/90-gcr-ssh-agent.conf"
 omac_commit=fe434579e7fa9dc0fa3d0f87905cf4fd057fd4f1
 mode=${1:-}
 case "$mode" in ""|--check|--remove) ;; *) echo "Usage: $0 [--check|--remove]" >&2; exit 2 ;; esac
-for cmd in python3 hyprctl omarchy git systemctl hyprsunset; do
+for cmd in python3 hyprctl omarchy git systemctl hyprsunset gsettings; do
   command -v "$cmd" >/dev/null || { echo "Missing dependency: $cmd" >&2; exit 1; }
 done
 [[ -f /usr/share/omarchy/default/hypr/toggles.lua ]] || {
@@ -28,6 +28,7 @@ if [[ "$mode" == --remove ]]; then
   python3 "$repo/link.py" --remove
 elif [[ "$mode" == --check ]]; then
   python3 "$repo/link.py" --check
+  python3 "$repo/localsearch.py" --check
   systemctl --user --quiet is-enabled gcr-ssh-agent.socket || {
     echo "SSH agent socket is not enabled" >&2; exit 1;
   }
@@ -64,6 +65,7 @@ else
     echo "Note: existing omac differs from the tested pin; leaving it untouched." >&2
   fi
   python3 "$repo/link.py"
+  python3 "$repo/localsearch.py"
   bash "$plugin/install.sh"
   omarchy-shell shell rescanPlugins
   omarchy plugin enable io.github.nchudleigh.omac

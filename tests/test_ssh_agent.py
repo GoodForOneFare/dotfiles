@@ -35,6 +35,7 @@ class AgentSetupTests(unittest.TestCase):
             stub = '''#!/usr/bin/env bash
 set -eu
 case "${0##*/}" in
+gsettings) ;; # No LocalSearch schema in this isolated desktop test.
 systemctl)
   echo "$*" >> "$HOME/commands"
   case "$*" in
@@ -50,7 +51,7 @@ omarchy)
   esac ;;
 esac
 '''
-            for name in ('systemctl', 'omarchy', 'hyprctl', 'hyprsunset', 'omarchy-shell'):
+            for name in ('systemctl', 'omarchy', 'hyprctl', 'hyprsunset', 'omarchy-shell', 'gsettings'):
                 target = bindir / name
                 target.write_text(stub)
                 target.chmod(0o755)
