@@ -13,7 +13,8 @@ hl = {
   get_active_window = function() return active end,
   get_windows = function() return peers end,
   dispatch = function(value) table.insert(dispatched, value) end,
-  dsp = { window = {
+  dsp = { focus = function(value) value.op = "focus"; return value end,
+    window = {
     alter_zorder = function(value) value.op = "zorder"; return value end,
     float = function(value) value.op = "float"; return value end,
     resize = function(value)
@@ -115,4 +116,68 @@ peers = {active}
 opened_handler(active)
 pending()
 assert(#dispatched == 0 and active.fullscreen == 2)
-print("Opening, floating activation, fullscreen cleanup and stale-focus checks passed.")
+-- Regression: Chrome above fullscreen Slack in workspace 1; switch to the
+-- lone Ghostty in workspace 2, cycle it, then return. No workspace-2 operation
+-- may reorder workspace 1, and automatic fullscreen focus must restore Chrome.
+local chrome = win("0xc1", {focus_history_id = 0})
+local slack = win("0xc2", {fullscreen = 2, focus_history_id = 1})
+local ghostty = win("0xc3", {workspace = {id = 2}, focus_history_id = 2})
+peers = {chrome, slack, ghostty}
+active = chrome
+dispatched = {}
+handler(chrome, 3) -- explicit focus
+pending()
+assert(#dispatched == 1 and dispatched[1].window == "address:0xc1")
+active = ghostty
+dispatched = {}
+handler(ghostty, 11) -- enter workspace 2
+pending()
+handler(ghostty, 3) -- switcher picks its only window
+pending()
+for _, d in ipairs(dispatched) do assert(d.window == "address:0xc3") end
+active = slack
+dispatched = {}
+handler(slack, 11) -- Hyprland's automatic fullscreen choice on workspace return
+assert(#dispatched == 0)
+pending()
+assert(#dispatched == 2)
+assert(dispatched[1].op == "focus" and dispatched[1].window == "address:0xc1")
+assert(dispatched[2].window == "address:0xc1" and dispatched[2].mode == "top")
+assert(slack.fullscreen == 2 and chrome.workspace.id == 1)
+
+-- Explicitly choosing Slack still reveals fullscreen and replaces the memory.
+dispatched = {}
+handler(slack, 3)
+pending()
+assert(#dispatched == 1 and dispatched[1].window == "address:0xc1"
+  and dispatched[1].mode == "bottom")
+dispatched = {}
+handler(slack, 11)
+pending()
+assert(#dispatched == 1 and dispatched[1].mode == "bottom")
+
+-- Reload seeds the workspace choice from compositor MRU, not stacking order.
+peers = {slack, ghostty, chrome}
+dofile("hypr/.config/hypr/personal/foreground.lua")
+dispatched = {}
+handler(slack, 11)
+pending()
+assert(#dispatched == 2 and dispatched[1].op == "focus"
+  and dispatched[1].window == "address:0xc1")
+
+-- A closed/moved/tiled/pinned remembered float must never redirect focus.
+for _, overrides in ipairs({{mapped = false}, {workspace = {id = 3}},
+    {floating = false}, {pinned = true}}) do
+  peers = {win("0xc1", overrides), slack, ghostty}
+  dispatched = {}
+  handler(slack, 11)
+  pending()
+  for _, d in ipairs(dispatched) do assert(d.op ~= "focus") end
+end
+peers = {chrome, slack, ghostty}
+dispatched = {}
+handler(slack, 11)
+active = ghostty -- user moved again before restoration
+pending()
+assert(#dispatched == 0)
+print("Opening, workspace return, fullscreen cleanup and stale-focus checks passed.")

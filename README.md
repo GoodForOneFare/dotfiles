@@ -220,6 +220,16 @@ restored after floating. Existing tiled windows are left alone on ordinary focus
 changes. It does not force focus when an app never requests activation or change
 fullscreen state. This runs
 after focus settles and does nothing if focus has already moved elsewhere.
+
+The hook also remembers the last explicitly focused window per workspace,
+seeded from compositor MRU on reload. Hyprland 0.56.2 automatically focuses a
+workspace's fullscreen owner when returning, even when a floating browser was
+last used above it. For that workspace-change focus reason only, the hook
+restores the remembered mapped, unpinned, non-fullscreen float on that same
+workspace instead of lowering it. Explicitly choosing the fullscreen app still
+reveals it normally. Using the switcher on a different workspace never changes
+that remembered choice; stale/closed/moved targets and later focus changes are
+ignored. No fullscreen state is changed.
 Run `lua tests/test_foreground.lua` for the mocked focus/stacking regression test.
 No extra package or daemon is required, and no packaged UI source is modified.
 
